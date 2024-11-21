@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "seating3"
+version = "0.1.0"
+description = "table"
+authors = ["Kronifer <44979306+Kronifer@users.noreply.github.com>"]
+license = "Proprietary"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.13"
+Flask = "^3.1.0"
+Flask-SocketIO = "^5.4.1"
+pymongo = "^4.10.1"
+gunicorn = "^23.0.0"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.10.0"
+pre-commit = "^4.0.1"
+isort = "^5.13.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
