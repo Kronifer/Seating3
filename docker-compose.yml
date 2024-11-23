@@ -1,0 +1,14 @@
+version: '3.1'
+services:
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "seating"
+      MONGO_INITDB_ROOT_PASSWORD: "changethis"
+      MONGO_INITDB_NEW_USERNAME: "seatingReadWrite"
+      MONGO_INITDB_NEW_PASSWORD: "BLxh%23mspdUWv"
+      MONGO_INITDB_DATABASE: "seating"
+    volumes:
+      - ./setup_mongo.js:/docker-entrypoint-initdb.d/mongo-init.js:ro

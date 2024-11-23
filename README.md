@@ -5,6 +5,8 @@
 
 `poetry run pre-commit install`
 
+`npm install`
+
 ## Committing
 `git add .`
 
@@ -16,3 +18,7 @@ If pre-commit changes files, do that again
 - MONGO_USR: mongodb username
 - MONGO_PASS: mongodb password
 - MONGO_PORT: mongodb port
+
+## Starting Database
+Replace environment variables in .env and docker-compose.yml to your liking, then run
+`docker compose up --build`
