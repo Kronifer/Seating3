@@ -4,7 +4,7 @@ db.getSiblingDB('admin').auth(
 );
 
 db.createCollection("tokens", {
-    validation: {
+    validator: {
         $jsonSchema: {
           bsonType: "object",
           required: ["username", "token"],
