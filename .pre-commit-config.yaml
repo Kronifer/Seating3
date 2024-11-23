@@ -5,11 +5,18 @@ repos:
     -   id: check-yaml
     -   id: end-of-file-fixer
     -   id: trailing-whitespace
--   repo: https://github.com/psf/black
-    rev: 22.10.0
+-   repo: local
     hooks:
     -   id: black
--   repo: https://github.com/PyCQA/isort
-    rev: 5.13.2
-    hooks:
+        name: black
+        description: format code
+        entry: poetry run black --line-length 120
+        language: system
+        'types_or': [python, pyi]
+        require_serial: true
     -   id: isort
+        name: isort
+        description: sort imports
+        entry: poetry run isort
+        language: system
+        'types_or': [python, pyi]
