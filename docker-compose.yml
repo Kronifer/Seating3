@@ -1,5 +1,12 @@
 version: '3.1'
 services:
+  ofelia:
+    image: mcuadros/ofelia:latest
+    depends_on:
+      - mongo
+    command: daemon --docker -f label=com.docker.compose.project=${COMPOSE_PROJECT_NAME}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
   mongo:
     image: mongo
     ports:
@@ -12,3 +19,10 @@ services:
       MONGO_INITDB_DATABASE: "seating"
     volumes:
       - ./setup_mongo.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./backups:/backup:rw
+    labels:
+      ofelia.enabled: "true"
+      ofelia.job-exec.clearbackups.schedule: "@every 10m"
+      ofelia.job-exec.clearbackups.command: "rm -rf /backup/*"
+      ofelia.job-exec.backup.schedule: "@every 10m"
+      ofelia.job-exec.backup.command: "mongodump -u seating -p changethis -o /backup"
