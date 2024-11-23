@@ -22,3 +22,6 @@ If pre-commit changes files, do that again
 ## Starting Database
 Replace environment variables in .env and docker-compose.yml to your liking, then run
 `docker compose up --build`
+
+## Starting Site
+`poetry run task run-server`
