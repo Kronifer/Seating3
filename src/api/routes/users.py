@@ -39,7 +39,7 @@ def login_user():
         return "Invalid password", 400, {"Content-Type": "text/plain"}
     token = secrets.token_hex(64)
     database.get_collection("tokens").insert_one({"username": uname, "token": token, "timeCreated": tstamp})
-    return {"token": token, "expires_at": int(tstamp.timestamp())}, 200, {"Content-Type": "application/json"}
+    return {"token": token, "expires_at": int(tstamp.timestamp()) + 3600}, 200, {"Content-Type": "application/json"}
 
 
 @users.route("/api/users/create", methods=["POST"])
