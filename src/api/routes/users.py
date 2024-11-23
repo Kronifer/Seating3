@@ -1,5 +1,6 @@
 import hashlib
 import secrets
+from datetime import datetime
 from os import environ
 
 import pymongo
@@ -17,7 +18,7 @@ client = pymongo.MongoClient(mongouri)
 users = Blueprint("users", __name__)
 
 
-@users.route("/users/login", methods=["POST"])
+@users.route("/api/users/login", methods=["POST"])
 def login_user():
     try:
         database = client.get_database("seating")
@@ -33,12 +34,15 @@ def login_user():
     except KeyError:
         return "Bad Request", 400, {"Content-Type": "text/plain"}
     hash = hashlib.sha3_512(bytes.fromhex(pwd) + bytes.fromhex(user["hash"]["salt"])).digest().hex()
+    tstamp = datetime.now()
     if hash != user["hash"]["string"]:
         return "Invalid password", 400, {"Content-Type": "text/plain"}
-    return "OK", 200, {"Content-Type": "text/plain"}  # TODO: BROWSER COOKIES
+    token = secrets.token_hex(64)
+    database.get_collection("tokens").insert_one({"username": uname, "token": token, "timeCreated": tstamp})
+    return {"token": token, "expires_at": int(tstamp.timestamp())}, 200, {"Content-Type": "application/json"}
 
 
-@users.route("/users/create", methods=["POST"])
+@users.route("/api/users/create", methods=["POST"])
 def create_user():
     try:
         database = client.get_database("seating")

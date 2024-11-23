@@ -2,11 +2,30 @@ db.getSiblingDB('admin').auth(
     process.env.MONGO_INITDB_ROOT_USERNAME,
     process.env.MONGO_INITDB_ROOT_PASSWORD
 );
-db.getSiblingDB('admin').createUser({
-    user: process.env.MONGO_INITDB_NEW_USERNAME,
-    pwd: process.env.MONGO_INITDB_NEW_PASSWORD,
-    roles: [{role: "readWrite", db: "seating"}]
+
+db.createCollection("tokens", {
+    validation: {
+        $jsonSchema: {
+          bsonType: "object",
+          required: ["username", "token"],
+          properties: {
+            username: {
+              bsonType: "string",
+              minLength: 5,
+              maxLength: 64,
+              description: "'username' must be the username associated with the token and must be a string at least 5 characters long."
+            },
+            token: {
+              bsonType: "string",
+              maxLength: 128,
+              description: "'token' must be the token granted and must be a string 128 characters long."
+            }
+          }
+        }
+      }
 });
+
+db.tokens.createIndex({"timeCreated": 1}, {expireAfterSeconds: 3600})
 
 db.createCollection("users", {
     validator: {
@@ -54,9 +73,20 @@ db.createCollection("users", {
               bsonType: 'string',
               description: '\'email\' must be present and it must be a valid email.',
               pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$'
+            },
+            createdEvents: {
+              bsonType: 'array',
+              description: 'An array of DBRefs to events the user has created.'
             }
           }
         }
       }
     }
 );
+
+
+db.getSiblingDB('admin').createUser({
+    user: process.env.MONGO_INITDB_NEW_USERNAME,
+    pwd: process.env.MONGO_INITDB_NEW_PASSWORD,
+    roles: [{role: "readWrite", db: "seating"}]
+});
