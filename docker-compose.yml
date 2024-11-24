@@ -13,7 +13,7 @@ services:
       - "27017:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: "seating"
-      MONGO_INITDB_ROOT_PASSWORD: "changethis"
+      MONGO_INITDB_ROOT_PASSWORD: "sOVHBtz&Cikm"
       MONGO_INITDB_NEW_USERNAME: "seatingReadWrite"
       MONGO_INITDB_NEW_PASSWORD: "BLxh%23mspdUWv"
       MONGO_INITDB_DATABASE: "seating"
@@ -25,4 +25,4 @@ services:
       ofelia.job-exec.clearbackups.schedule: "@every 10m"
       ofelia.job-exec.clearbackups.command: "rm -rf /backup/*"
       ofelia.job-exec.backup.schedule: "@every 10m"
-      ofelia.job-exec.backup.command: "mongodump -u seating -p changethis -o /backup"
+      ofelia.job-exec.backup.command: "mongodump -u seating -p sOVHBtz&Cikm -o /backup"
