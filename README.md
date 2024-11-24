@@ -19,9 +19,5 @@ If pre-commit changes files, do that again
 - MONGO_PASS: mongodb password
 - MONGO_PORT: mongodb port
 
-## Starting Database
-Replace environment variables in .env and docker-compose.yml to your liking, then run
-`docker compose up --build`
-
-## Starting Site
-`poetry run task run-server`
+## Starting Project
+`docker build . -t seatingapi && docker compose up --build -d`

@@ -9,9 +9,7 @@ from flask import Blueprint, request
 
 load_dotenv()
 
-mongouri = (
-    f"mongodb://{environ["MONGO_USR"]}:{environ["MONGO_PASS"]}@localhost:{environ["MONGO_PORT"]}/?authSource=admin"
-)
+mongouri = f"mongodb://{environ["MONGO_USR"]}:{environ["MONGO_PASS"]}@{environ["MONGO_CONTAINER_NAME"]}:{environ["MONGO_PORT"]}/?authSource=admin"
 
 client = pymongo.MongoClient(mongouri)
 

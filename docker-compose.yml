@@ -1,5 +1,9 @@
 version: '3.1'
 services:
+  seatingapi:
+    image: seatingapi:latest
+    ports:
+      - "8000:8000"
   ofelia:
     image: mcuadros/ofelia:latest
     depends_on:
@@ -9,8 +13,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
   mongo:
     image: mongo
-    ports:
-      - "27017:27017"
+    container_name: serverdb
     environment:
       MONGO_INITDB_ROOT_USERNAME: "seating"
       MONGO_INITDB_ROOT_PASSWORD: "sOVHBtz&Cikm"
