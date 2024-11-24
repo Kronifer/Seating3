@@ -14,10 +14,11 @@
 
 If pre-commit changes files, do that again
 
-## Required Environment Vars (make a root .env file)
+## Required Environment Vars (set in docker-compose.yml)
 - MONGO_USR: mongodb username
 - MONGO_PASS: mongodb password
 - MONGO_PORT: mongodb port
+- MONGO_CONTAINER_NAME: container name of mongodb
 
 ## Starting Project
 `docker build . -t seatingapi && docker compose up --build -d`

@@ -4,10 +4,7 @@ from datetime import datetime
 from os import environ
 
 import pymongo
-from dotenv import load_dotenv
 from flask import Blueprint, request
-
-load_dotenv()
 
 mongouri = f"mongodb://{environ["MONGO_USR"]}:{environ["MONGO_PASS"]}@{environ["MONGO_CONTAINER_NAME"]}:{environ["MONGO_PORT"]}/?authSource=admin"
 
@@ -36,6 +33,8 @@ def login_user():
     if hash != user["hash"]["string"]:
         return "Invalid password", 400, {"Content-Type": "text/plain"}
     token = secrets.token_hex(64)
+    while database.get_collection("tokens").find_one({"token": token}) is not None:
+        token = secrets.token_hex(64)
     database.get_collection("tokens").insert_one({"username": uname, "token": token, "timeCreated": tstamp})
     return {"token": token, "expires_at": int(tstamp.timestamp()) + 3600}, 200, {"Content-Type": "application/json"}
 
