@@ -40,6 +40,22 @@ def login_user():
     return {"token": token, "expires_at": int(tstamp.timestamp()) + 3600}, 200, {"Content-Type": "application/json"}
 
 
+@users.route("/api/users/renewtoken", methods=["POST"])
+def update_token():
+    try:
+        database = client.get_database("seating")
+        token_collection = database.get_collection("tokens")
+    except:
+        return "Internal Server Error", 500, {"Content-Type": "text/plain"}
+    try:
+        if token_collection.find_one({"token": request.form["token"]}) is None:
+            return "Token does not exist or has expired.", 400, {"Content-Type": "text/plain"}
+    except KeyError:
+        return "Must supply a token to renew.", 400, {"Content-Type": "text/plain"}
+    token_collection.find_one_and_update({"token": request.form["token"]}, {"timeCreated", datetime.now()})
+    return "Successfully updated token.", 200, {"Content-Type": "text/plain"}
+
+
 @users.route("/api/users/create", methods=["POST"])
 def create_user():
     try:

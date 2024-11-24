@@ -7,6 +7,7 @@ db.createCollection("tokens", {
     validator: {
         $jsonSchema: {
           bsonType: "object",
+          title: "Token Validation",
           required: ["username", "token"],
           properties: {
             username: {
