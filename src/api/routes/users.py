@@ -10,10 +10,10 @@ mongouri = f"mongodb://{environ["MONGO_USR"]}:{environ["MONGO_PASS"]}@{environ["
 
 client = pymongo.MongoClient(mongouri)
 
-users = Blueprint("users", __name__)
+users = Blueprint("users", __name__, url_prefix="/api/users")
 
 
-@users.route("/api/users/login", methods=["POST"])
+@users.route("/login", methods=["POST"])
 def login_user():
     try:
         database = client.get_database("seating")
@@ -39,7 +39,7 @@ def login_user():
     return {"token": token, "expires_at": int(tstamp.timestamp()) + 3600}, 200, {"Content-Type": "application/json"}
 
 
-@users.route("/api/users/renewtoken", methods=["POST"])
+@users.route("/renewtoken", methods=["POST"])
 def update_token():
     try:
         database = client.get_database("seating")
@@ -55,7 +55,7 @@ def update_token():
     return "Successfully updated token.", 200, {"Content-Type": "text/plain"}
 
 
-@users.route("/api/users/create", methods=["POST"])
+@users.route("/create", methods=["POST"])
 def create_user():
     try:
         database = client.get_database("seating")
