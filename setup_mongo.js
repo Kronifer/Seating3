@@ -124,6 +124,8 @@ db.createCollection("users", {
 );
 
 
+db.createCollection('events')
+
 db.getSiblingDB('admin').createUser({
     user: process.env.MONGO_INITDB_NEW_USERNAME,
     pwd: process.env.MONGO_INITDB_NEW_PASSWORD,
