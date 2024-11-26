@@ -36,9 +36,14 @@ db.createCollection("users", {
           required: [
             'username',
             'hash',
-            'email'
+            'email',
+            'name'
           ],
           properties: {
+            name: {
+              bsonType: 'string',
+              description: '\'name\' must be present and must be a string containing the users real name.'
+            },
             hash: {
               bsonType: 'object',
               required: [

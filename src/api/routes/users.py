@@ -47,11 +47,11 @@ def update_token():
     except:
         return "Internal Server Error", 500, {"Content-Type": "text/plain"}
     try:
-        if token_collection.find_one({"token": request.form["token"]}) is None:
+        if token_collection.find_one({"token": request.headers["Authorization"]}) is None:
             return "Token does not exist or has expired.", 400, {"Content-Type": "text/plain"}
     except KeyError:
         return "Must supply a token to renew.", 400, {"Content-Type": "text/plain"}
-    token_collection.find_one_and_update({"token": request.form["token"]}, {"timeCreated", datetime.now()})
+    token_collection.find_one_and_update({"token": request.headers["Authorization"]}, {"timeCreated", datetime.now()})
     return "Successfully updated token.", 200, {"Content-Type": "text/plain"}
 
 
@@ -70,11 +70,17 @@ def create_user():
         if user_collection.find_one({"email": email}) is not None:
             return "Email already exists.", 400, {"Content-Type": "text/plain"}
         pwd = request.form["pwd"]
+        name = request.form["name"]
     except KeyError:
         return "bad request", 400
     salt = secrets.token_bytes(8)
     hash = hashlib.sha3_512(bytes.fromhex(pwd) + salt).digest().hex()
     user_collection.insert_one(
-        {"username": uname, "email": email, "hash": {"algorithm": "SHA512", "salt": salt.hex(), "string": hash}}
+        {
+            "username": uname,
+            "name": name,
+            "email": email,
+            "hash": {"algorithm": "SHA512", "salt": salt.hex(), "string": hash},
+        }
     )
     return "Successfully created user", 201, {"Content-Type": "text/plain"}
