@@ -3,6 +3,31 @@ db.getSiblingDB('admin').auth(
     process.env.MONGO_INITDB_ROOT_PASSWORD
 );
 
+db.createCollection("verify", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      title: "Verify Validation",
+      required: ["username", "code"],
+      properties: {
+        username: {
+          bsonType: "string",
+          minLength: 5,
+          maxLength: 64,
+          description: "'username' must be the username associated with the token and must be a string at least 5 characters long."
+        },
+        code: {
+          bsonType: "string",
+          maxLength: 6,
+          description: "'code' must be the code used to verify signup and must be a 6 character long string."
+        }
+      }
+    }
+  }
+})
+
+db.verify.createIndex({"timeCreated": 1}, {expireAfterSeconds: 3600})
+
 db.createCollection("tokens", {
     validator: {
         $jsonSchema: {
@@ -37,9 +62,14 @@ db.createCollection("users", {
             'username',
             'hash',
             'email',
-            'name'
+            'name',
+            'verified'
           ],
           properties: {
+            verified: {
+              bsonType: 'boolean',
+              description: '\'verified\' must be present and must be a boolean stating whether or not the user has verified their email.'
+            },
             name: {
               bsonType: 'string',
               description: '\'name\' must be present and must be a string containing the users real name.'

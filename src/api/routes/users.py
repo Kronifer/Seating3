@@ -2,9 +2,12 @@ import hashlib
 import secrets
 from datetime import datetime
 from os import environ
+from smtplib import SMTP
 
 import pymongo
 from flask import Blueprint, request
+
+from ..utils import decorators
 
 mongouri = f"mongodb://{environ["MONGO_USR"]}:{environ["MONGO_PASS"]}@{environ["MONGO_CONTAINER_NAME"]}:{environ["MONGO_PORT"]}/?authSource=admin"
 
@@ -25,6 +28,8 @@ def login_user():
         user = user_collection.find_one({"username": uname})
         if user is None:
             return "Username does not exist.", 400, {"Content-Type": "text/plain"}
+        if not user["verified"]:
+            return "Email has not been verified.", 401, {"Content-Type": "text/plain"}
         pwd = request.form["pwd"]
     except KeyError:
         return "Bad Request", 400, {"Content-Type": "text/plain"}
@@ -60,6 +65,7 @@ def create_user():
     try:
         database = client.get_database("seating")
         user_collection = database.get_collection("users")
+        verify_collection = database.get_collection("verify")
     except:
         return "Internal Server Error", 500, {"Content-Type": "text/plain"}
     try:
@@ -81,6 +87,18 @@ def create_user():
             "name": name,
             "email": email,
             "hash": {"algorithm": "SHA512", "salt": salt.hex(), "string": hash},
+            "verified": False,
         }
     )
+    with SMTP("localhost") as smtp:
+        vcode = "".join([secrets.choice("1234567890") for i in range(6)])
+        smtp.sendmail(f"{environ["POSTFIX_USR"]@["POSTFIX_DOMAIN"]}", email, f"Verification Code: {vcode}")
+        verify_collection.insert_one({"username": uname, "code": vcode, "createdAt": datetime.datetime.now()})
     return "Successfully created user", 201, {"Content-Type": "text/plain"}
+
+
+@users.route("/getuser", methods=["GET"])
+@decorators.authenticated
+def getuser(user):
+    del user["hash"]
+    return user
