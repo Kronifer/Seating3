@@ -149,6 +149,6 @@ def verify():
         return "The code supplied is invalid or has expired.", 401, {"Content-Type": "text/plain"}
     if code["email"] != email:
         return "The email supplied does not match the supplied code.", 401, {"Content-Type": "text/plain"}
-    users.find_one_and_update({"email": email}, {"verified": True})
+    users.find_one_and_update({"email": email}, {"$set": {"verified": True}})
     verify.find_one_and_delete({"code": vcode})
     return "Successfully verified user.", 201, {"Content-Type": "text/plain"}
