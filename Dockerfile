@@ -7,4 +7,4 @@ COPY poetry.lock /srv
 RUN poetry install --no-ansi --no-interaction
 COPY ./src /srv/src
 EXPOSE 8000
-ENTRYPOINT ["poetry", "run", "gunicorn", "--bind=:8000", "--access-logfile", "-", "--error-logfile", "-", "src.api.app:app"]
+ENTRYPOINT ["poetry", "run", "gunicorn", "--bind=:80", "--access-logfile", "-", "--error-logfile", "-", "src.api.app:app"]

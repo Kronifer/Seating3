@@ -131,6 +131,8 @@ def create_user():
 @decorators.authenticated
 def getuser(user):
     del user["hash"]
+    del user["_id"]
+    del user["verified"]
     return user
 
 

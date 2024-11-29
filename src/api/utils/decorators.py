@@ -8,8 +8,8 @@ mongouri = f"mongodb://{environ["MONGO_USR"]}:{environ["MONGO_PASS"]}@{environ["
 client = pymongo.MongoClient(mongouri)
 
 
-def authenticated(f):
-    def inner(f):
+def authenticated(func):
+    def inner():
         db = client.get_database("seating")
         users = db.get_collection("users")
         tokens = db.get_collection("tokens")
@@ -29,6 +29,5 @@ def authenticated(f):
             )
         if not user["verified"]:
             return "The user has not yet verified their email.", 401, {"Content-Type": "text/plain"}
-        return f(user)
-
+        return func(user)
     return inner

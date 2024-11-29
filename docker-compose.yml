@@ -10,7 +10,7 @@ services:
   seatingapi:
     image: seatingapi:latest
     ports:
-      - "8000:8000"
+      - "80:80"
     environment:
       MONGO_USR: "seatingReadWrite"
       MONGO_PASS: "BLxh%2523mspdUWv"
