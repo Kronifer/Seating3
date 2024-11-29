@@ -29,4 +29,4 @@ def authenticated(f):
             )
         return f(user)
 
-    return inner(f)
+    return inner

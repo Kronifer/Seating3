@@ -1,5 +1,12 @@
 version: '3.1'
 services:
+  seatingmail:
+    container_name: seatingmail
+    image: seatingmail:latest
+    ports:
+      - "25:25"
+      - "587:587"
+      - "465:465"
   seatingapi:
     image: seatingapi:latest
     ports:
@@ -9,6 +16,9 @@ services:
       MONGO_PASS: "BLxh%2523mspdUWv"
       MONGO_PORT: 27017
       MONGO_CONTAINER_NAME: "serverdb"
+      POSTFIX_USR: "noreply"
+      POSTFIX_DOMAIN: "seating3.dev"
+      POSTFIX_CONN: "seatingmail"
   ofelia:
     image: mcuadros/ofelia:latest
     depends_on:
@@ -27,8 +37,6 @@ services:
       MONGO_INITDB_NEW_USERNAME: "seatingReadWrite"
       MONGO_INITDB_NEW_PASSWORD: "BLxh%23mspdUWv"
       MONGO_INITDB_DATABASE: "seating"
-      POSTFIX_USR: "noreply"
-      POSTFIX_DOMAIN: "seating3.dev"
     volumes:
       - ./setup_mongo.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
       - ./backups:/backup:rw

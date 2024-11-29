@@ -67,7 +67,7 @@ db.createCollection("users", {
           ],
           properties: {
             verified: {
-              bsonType: 'boolean',
+              bsonType: 'bool',
               description: '\'verified\' must be present and must be a boolean stating whether or not the user has verified their email.'
             },
             name: {

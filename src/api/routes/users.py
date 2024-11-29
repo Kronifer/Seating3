@@ -3,6 +3,7 @@ import secrets
 from datetime import datetime
 from os import environ
 from smtplib import SMTP
+from email.message import EmailMessage
 
 import pymongo
 from flask import Blueprint, request
@@ -90,10 +91,15 @@ def create_user():
             "verified": False,
         }
     )
-    with SMTP("localhost") as smtp:
+    with SMTP(environ["POSTFIX_CONN"]) as smtp:
         vcode = "".join([secrets.choice("1234567890") for i in range(6)])
-        smtp.sendmail(f"{environ["POSTFIX_USR"]@["POSTFIX_DOMAIN"]}", email, f"Verification Code: {vcode}")
-        verify_collection.insert_one({"username": uname, "code": vcode, "createdAt": datetime.datetime.now()})
+        msg = EmailMessage()
+        msg.set_content(f"Verification Code: {vcode}. It will expire in one hour.")
+        msg["Subject"] = "Seating3 Verification Code"
+        msg["From"] = f"{environ['POSTFIX_USR']}@{environ['POSTFIX_DOMAIN']}"
+        msg["To"] = email
+        smtp.send_message(msg)
+        verify_collection.insert_one({"username": uname, "code": vcode, "createdAt": datetime.now()})
     return "Successfully created user", 201, {"Content-Type": "text/plain"}
 
 
