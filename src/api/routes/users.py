@@ -41,9 +41,9 @@ def login_user():
     if not user["verified"]:
         if database.get_collection("verify").find_one({"email": user["email"]}) is None:
             with SMTP(environ["POSTFIX_CONN"]) as smtp:
-                vcode = "".join([secrets.choice("1234567890") for _ in range(12)])
+                vcode = "".join([secrets.choice("1234567890") for _ in range(6)])
                 while verify.find_one({"code": vcode}) is not None:
-                    vcode = "".join([secrets.choice("1234567890") for _ in range(12)])
+                    vcode = "".join([secrets.choice("1234567890") for _ in range(6)])
                 msg = EmailMessage()
                 msg.set_content(f"Verification Code: {vcode}. It will expire in one hour.")
                 msg["Subject"] = "Seating3 Verification Code"
@@ -114,9 +114,9 @@ def create_user():
         }
     )
     with SMTP(environ["POSTFIX_CONN"]) as smtp:
-        vcode = "".join([secrets.choice("1234567890") for _ in range(12)])
+        vcode = "".join([secrets.choice("1234567890") for _ in range(6)])
         while verify.find_one({"code": vcode}) is not None:
-            vcode = "".join([secrets.choice("1234567890") for _ in range(12)])
+            vcode = "".join([secrets.choice("1234567890") for _ in range(6)])
         msg = EmailMessage()
         msg.set_content(f"Verification Code: {vcode}. It will expire in one hour.")
         msg["Subject"] = "Seating3 Verification Code"
