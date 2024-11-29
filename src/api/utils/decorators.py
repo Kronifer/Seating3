@@ -27,6 +27,8 @@ def authenticated(f):
                 401,
                 {"Content-Type": "text/plain"},
             )
+        if not user["verified"]:
+            return "The user has not yet verified their email.", 401, {"Content-Type": "text/plain"}
         return f(user)
 
     return inner

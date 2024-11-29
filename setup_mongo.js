@@ -8,18 +8,17 @@ db.createCollection("verify", {
     $jsonSchema: {
       bsonType: "object",
       title: "Verify Validation",
-      required: ["username", "code"],
+      required: ["email", "code"],
       properties: {
-        username: {
-          bsonType: "string",
-          minLength: 5,
-          maxLength: 64,
-          description: "'username' must be the username associated with the token and must be a string at least 5 characters long."
+        email: {
+          bsonType: 'string',
+          description: '\'email\' must be present and it must be a valid email.',
+          pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$'
         },
         code: {
           bsonType: "string",
-          maxLength: 6,
-          description: "'code' must be the code used to verify signup and must be a 6 character long string."
+          maxLength: 12,
+          description: "'code' must be the code used to verify signup and must be a 12 character long string."
         }
       }
     }

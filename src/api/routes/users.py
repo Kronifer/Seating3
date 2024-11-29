@@ -1,9 +1,9 @@
 import hashlib
 import secrets
 from datetime import datetime
+from email.message import EmailMessage
 from os import environ
 from smtplib import SMTP
-from email.message import EmailMessage
 
 import pymongo
 from flask import Blueprint, request
@@ -38,6 +38,28 @@ def login_user():
     tstamp = datetime.now()
     if hash != user["hash"]["string"]:
         return "Invalid password", 400, {"Content-Type": "text/plain"}
+    if not user["verified"]:
+        if database.get_collection("verify").find_one({"email": user["email"]}) is None:
+            with SMTP(environ["POSTFIX_CONN"]) as smtp:
+                vcode = "".join([secrets.choice("1234567890") for _ in range(12)])
+                while verify.find_one({"code": vcode}) is not None:
+                    vcode = "".join([secrets.choice("1234567890") for _ in range(12)])
+                msg = EmailMessage()
+                msg.set_content(f"Verification Code: {vcode}. It will expire in one hour.")
+                msg["Subject"] = "Seating3 Verification Code"
+                msg["From"] = f"{environ['POSTFIX_USR']}@{environ['POSTFIX_DOMAIN']}"
+                msg["To"] = user["email"]
+                smtp.send_message(msg)
+                database.get_collection("verify").insert_one(
+                    {"email": user["email"], "code": vcode, "createdAt": datetime.now()}
+                )
+                return (
+                    "User has not verified their email. Verification code has been resent.",
+                    401,
+                    {"Content-Type": "text/plain"},
+                )
+        else:
+            return "User has not verified their email.", 401, {"Content-Type": "text/plain"}
     token = secrets.token_hex(64)
     while database.get_collection("tokens").find_one({"token": token}) is not None:
         token = secrets.token_hex(64)
@@ -66,7 +88,7 @@ def create_user():
     try:
         database = client.get_database("seating")
         user_collection = database.get_collection("users")
-        verify_collection = database.get_collection("verify")
+        verify = database.get_collection("verify")
     except:
         return "Internal Server Error", 500, {"Content-Type": "text/plain"}
     try:
@@ -92,15 +114,17 @@ def create_user():
         }
     )
     with SMTP(environ["POSTFIX_CONN"]) as smtp:
-        vcode = "".join([secrets.choice("1234567890") for i in range(6)])
+        vcode = "".join([secrets.choice("1234567890") for _ in range(12)])
+        while verify.find_one({"code": vcode}) is not None:
+            vcode = "".join([secrets.choice("1234567890") for _ in range(12)])
         msg = EmailMessage()
         msg.set_content(f"Verification Code: {vcode}. It will expire in one hour.")
         msg["Subject"] = "Seating3 Verification Code"
         msg["From"] = f"{environ['POSTFIX_USR']}@{environ['POSTFIX_DOMAIN']}"
         msg["To"] = email
         smtp.send_message(msg)
-        verify_collection.insert_one({"username": uname, "code": vcode, "createdAt": datetime.now()})
-    return "Successfully created user", 201, {"Content-Type": "text/plain"}
+        verify.insert_one({"email": email, "code": vcode, "createdAt": datetime.now()})
+    return "Successfully created user.", 202, {"Content-Type": "text/plain"}
 
 
 @users.route("/getuser", methods=["GET"])
@@ -108,3 +132,23 @@ def create_user():
 def getuser(user):
     del user["hash"]
     return user
+
+
+@users.route("/verify", methods=["POST"])
+def verify():
+    database = client.get_database("seating")
+    users = database.get_collection("users")
+    verify = database.get_collection("verify")
+    try:
+        vcode = request.form["vcode"]
+        email = request.form["email"]
+    except KeyError:
+        return "Bad Request", 401, {"Content-Type": "text/plain"}
+    code = verify.find_one({"code": vcode})
+    if code is None:
+        return "The code supplied is invalid or has expired.", 401, {"Content-Type": "text/plain"}
+    if code["email"] != email:
+        return "The email supplied does not match the supplied code.", 401, {"Content-Type": "text/plain"}
+    users.find_one_and_update({"email": email}, {"verified": True})
+    verify.find_one_and_delete({"code": vcode})
+    return "Successfully verified user.", 201, {"Content-Type": "text/plain"}
