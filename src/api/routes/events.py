@@ -14,8 +14,8 @@ client = pymongo.MongoClient(mongouri)
 
 seating = Blueprint("events", __name__, url_prefix="/api/events")
 
-@decorators.authenticated
 @seating.route("/schedule", methods=["POST"])
+@decorators.authenticated
 def schedule_event(user):
     database = client.get_database("seating")
     events = database.get_collection("events")
@@ -35,8 +35,8 @@ def schedule_event(user):
     return "Event successfully created", 201, {"Content-Type":"text/plain"}
 
 
-@decorators.authenticated
 @seating.route("/delete", methods=["DELETE"])
+@decorators.authenticated
 def delete_event(user):
     events = client.get_database("seating").get_collection("events")
 
@@ -57,8 +57,8 @@ def delete_event(user):
 
     return "Event deleted", 200, {"Content-Type":"text/plain"}
 
-@decorators.authenticated
 @seating.route("/update", methods=["PATCH"])
+@decorators.authenticated
 def update_event(user):
     events = client.get_database("seating").get_collection("events")
 
@@ -93,8 +93,8 @@ def update_event(user):
 
 
 
-@decorators.authenticated
 @seating.route("/register", methods=["POST"])
+@decorators.authenticated
 def register_event(user):
     database = client.get_database("seating")
     events = database.get_collection("events")

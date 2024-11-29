@@ -2,6 +2,8 @@ from functools import wraps
 from os import environ
 
 import pymongo
+import time
+import hashlib
 from flask import request
 
 mongouri = f"mongodb://{environ["MONGO_USR"]}:{environ["MONGO_PASS"]}@{environ["MONGO_CONTAINER_NAME"]}:{environ["MONGO_PORT"]}/?authSource=admin"
@@ -46,4 +48,20 @@ def authenticated(func):
             return "The user has not yet verified their email.", 401, {"Content-Type": "text/plain"}
         return func(user, *args)
 
+    return inner
+
+
+def protected(f):
+    def inner(f):
+        security = request.headers.get("X-Security")
+
+        body_data = hashlib.sha256(request.get_data()).hexdigest()
+        sec_timeout = str(int(time.time()/60))
+
+        sec_verification = hashlib.sha256((sec_timeout + body_data + "protected-seating-data").encode('ascii')).hexdigest()
+
+        if security != sec_verification:
+            return "Unknown Message", 403, {"Content-Type":"text/plain"}
+
+        return f()
     return inner
