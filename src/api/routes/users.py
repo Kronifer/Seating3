@@ -115,7 +115,7 @@ def getuser(user):
 @users.route("/verifyemail", methods=["POST"])
 @decorators.access_database("seating", "users", "verify")
 def verify(db):
-    code = request.form.get("code", None)
+    code = str(request.form.get("code", None))
     email = request.form.get("email", None)
     if not all([code, email]):
         return "Bad Request", 401, {"Content-Type": "text/plain"}
