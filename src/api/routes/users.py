@@ -150,7 +150,7 @@ def resetpass(db):
             db["verify"].insert_one(
                 {"email": email, "code": vcode, "createdAt": datetime.now(), "scope": "passwordReset"}
             )
-        return "Sent code to reset password if email exists in database.", 400, {"text/plain"}
+        return "Sent code to reset password if email exists in database.", 400, {"Content-Type": "text/plain"}
     else:
         code = db["verify"].find_one({"code": code})
         if code is None or code["scope"] != "passwordReset":
