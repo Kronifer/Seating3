@@ -166,6 +166,6 @@ def resetpass(db):
             h = user["hash"]
             h["string"] = hash
             db["users"].update_one({"email": email}, {"$set": {"hash": h}})
-            db["verify"].delete_one({"code": code})
+            db["verify"].delete_one({"code": code["code"]})
             db["tokens"].delete_many({"username": user["username"]})
             return "Updated password.", 200, {"Content-Type": "text/plain"}
