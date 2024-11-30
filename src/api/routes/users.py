@@ -115,12 +115,12 @@ def getuser(user):
 @users.route("/verifyemail", methods=["POST"])
 @decorators.access_database("seating", "users", "verify")
 def verify(db):
-    code = str(request.form.get("code", None))
+    code = request.form.get("code", None)
     email = request.form.get("email", None)
     if not all([code, email]):
         return "Bad Request", 401, {"Content-Type": "text/plain"}
     code = db["verify"].find_one({"code": code})
-    if code is None or code["scope"] != email:
+    if code is None or code["scope"] != "email":
         return "The code supplied is invalid or has expired.", 401, {"Content-Type": "text/plain"}
     if code["email"] != email:
         return "The email supplied does not match the supplied code.", 401, {"Content-Type": "text/plain"}
