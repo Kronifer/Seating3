@@ -125,12 +125,12 @@ def verify(db):
     if code["email"] != email:
         return "The email supplied does not match the supplied code.", 401, {"Content-Type": "text/plain"}
     db["users"].update_one({"email": email}, {"$set": {"verified": True}})
-    db["verify"].find_one_and_delete({"code": code})
+    db["verify"].delete_one({"code": code})
     return "Successfully verified user.", 201, {"Content-Type": "text/plain"}
 
 
 @users.route("/resetpassword", methods=["POST"])
-@decorators.access_database("verify", "users")
+@decorators.access_database("verify", "users", "tokens")
 def resetpass(db):
     email = request.form.get("email", None)
     if email is None:
@@ -166,4 +166,6 @@ def resetpass(db):
             h = user["hash"]
             h["string"] = hash
             db["users"].update_one({"email": email}, {"$set": {"hash": h}})
+            db["verify"].delete_one({"code": code})
+            db["tokens"].delete_many({"username": user["username"]})
             return "Updated password.", 200, {"Content-Type": "text/plain"}
