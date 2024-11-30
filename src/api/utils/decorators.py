@@ -23,7 +23,7 @@ def access_database(*args):
 
 
 def authenticated(func):
-    @wrap(func)
+    @wraps(func)
     def inner(*args):
         db = client.get_database("seating")
         users = db.get_collection("users")
