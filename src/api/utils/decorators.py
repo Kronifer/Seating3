@@ -1,3 +1,4 @@
+from functools import wraps
 from os import environ
 
 import pymongo
@@ -8,8 +9,21 @@ mongouri = f"mongodb://{environ["MONGO_USR"]}:{environ["MONGO_PASS"]}@{environ["
 client = pymongo.MongoClient(mongouri)
 
 
+def access_database(*args):
+    def inner(func):
+        colls = {i: client.get_database("seating").get_collection(i) for i in args}
+
+        @wraps(func)
+        def wrapper():
+            return func(colls)
+
+        return wrapper
+
+    return inner
+
+
 def authenticated(func):
-    def inner():
+    def inner(*args):
         db = client.get_database("seating")
         users = db.get_collection("users")
         tokens = db.get_collection("tokens")
@@ -29,5 +43,6 @@ def authenticated(func):
             )
         if not user["verified"]:
             return "The user has not yet verified their email.", 401, {"Content-Type": "text/plain"}
-        return func(user)
+        return func(user, *args)
+
     return inner

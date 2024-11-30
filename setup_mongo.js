@@ -8,7 +8,7 @@ db.createCollection("verify", {
     $jsonSchema: {
       bsonType: "object",
       title: "Verify Validation",
-      required: ["email", "code"],
+      required: ["email", "code", "scope"],
       properties: {
         email: {
           bsonType: 'string',
@@ -17,8 +17,12 @@ db.createCollection("verify", {
         },
         code: {
           bsonType: "string",
-          maxLength: 12,
-          description: "'code' must be the code used to verify signup and must be a 12 character long string."
+          maxLength: 6,
+          description: "'code' must be the code used to verify signup and must be a 6 character long string."
+        },
+        scope: {
+          bsonType: "string",
+          description: "'scope' must be the scope of the verification code and must be present."
         }
       }
     }
