@@ -3,7 +3,6 @@ import secrets
 from datetime import datetime
 from os import environ
 
-import pymongo
 from flask import Blueprint, request
 
 from ..utils import decorators
@@ -112,8 +111,42 @@ def getuser(user):
     return user
 
 
+@users.route("/updateuser", methods=["POST"])
+@decorators.access_database("users")
+@decorators.authenticated
+def updateuser(user, db):
+    updatedFields = {}
+    if request.form.get("username") is not None:
+        updatedFields["username"] = request.form.get("username")
+    if request.form.get("name") is not None:
+        updatedFields["name"] = request.form.get("name")
+    if request.form.get("email") is not None:
+        if db["users"].find_one({"email": request.form.get("email")}) is not None:
+            return "Email already in use.", 400, {"Content-Type": "text/plain"}
+        updatedFields["email"] = request.form.get("email")
+        vcode = "".join([secrets.choice("1234567890") for _ in range(6)])
+        while db["verify"].find_one({"code": vcode}) is not None:
+            vcode = "".join([secrets.choice("1234567890") for _ in range(6)])
+        send_email(
+            f"{environ['POSTFIX_USR']}@{environ['POSTFIX_DOMAIN']}",
+            user["email"],
+            "Seating3 Verification Code",
+            f"Verification Code: {vcode}. It will expire in one hour.",
+        )
+        db["verify"].insert_one(
+            {"email": request.form.get("email"), "code": vcode, "createdAt": datetime.now(), "scope": "email"}
+        )
+        updatedFields["verified"] = False
+    db["users"].update_one({"username": user["username"]}, {"$set": updatedFields})
+    return (
+        "Successfully updated user. If you changed your email, you will need to reverify.",
+        200,
+        {"Content-Type": "text/plain"},
+    )
+
+
 @users.route("/verifyemail", methods=["POST"])
-@decorators.access_database("seating", "users", "verify")
+@decorators.access_database("users", "verify")
 def verify(db):
     code = request.form.get("code", None)
     email = request.form.get("email", None)
