@@ -162,7 +162,7 @@ def resetpass(db):
             return "Bad Request", 400, {"Content-Type": "text/plain"}
         else:
             user = db["users"].find_one({"email": email})
-            hash = hashlib.sha3_512(bytes.fromhex(pwd) + bytes.fromhex(user["salt"])).digest().hex()
+            hash = hashlib.sha3_512(bytes.fromhex(pwd) + bytes.fromhex(user["hash"]["salt"])).digest().hex()
             h = user["hash"]
             h["string"] = hash
             db["users"].update_one({"email": email}, {"$set": {"hash": h}})
