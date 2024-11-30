@@ -112,12 +112,13 @@ def getuser(user):
 
 
 @users.route("/updateuser", methods=["POST"])
-@decorators.access_database("users")
+@decorators.access_database("users", "tokens")
 @decorators.authenticated
 def updateuser(user, db):
     updatedFields = {}
     if request.form.get("username") is not None:
         updatedFields["username"] = request.form.get("username")
+        db["tokens"].update_many({"username": user["username"]}, {"$set": {"username": request.form.get("username")}})
     if request.form.get("name") is not None:
         updatedFields["name"] = request.form.get("name")
     if request.form.get("email") is not None:
