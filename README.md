@@ -19,6 +19,9 @@ If pre-commit changes files, do that again
 - MONGO_PASS: mongodb password
 - MONGO_PORT: mongodb port
 - MONGO_CONTAINER_NAME: container name of mongodb
+- POSTFIX_USR: email username
+- POSTFIX_DOMAIN: email domain
+- POSTFIX_CONN: internal domain to connect to
 
 ## Starting Project
-`docker build . -t seatingapi && docker compose up --build -d`
+`chmod +x ./build.sh && ./build.sh`
