@@ -71,6 +71,7 @@ def create_user(db):
     uname = request.form.get("username", None)
     pwd = request.form.get("pwd", None)
     name = request.form.get("name", None)
+    email = request.form.get("email", None)
     if not all([uname, pwd, name]):
         err = []
         if uname is None:
@@ -79,6 +80,8 @@ def create_user(db):
             err.append("pwd")
         if name is None:
             err.append("name")
+        if email is None:
+            err.append("email")
         return (
             {"status": "error", "msg": f"missing field(s): {", ".join(err)}"},
             400,
@@ -86,7 +89,6 @@ def create_user(db):
         )
     if db["users"].find_one({"username": uname}) is not None:
         return {"status": "error", "msg": "username already exists"}, 409, {"Content-Type": "application/json"}
-    email = request.form["email"]
     if db["users"].find_one({"email": email}) is not None:
         return {"status": "error", "msg": "email already exists"}, 409, {"Content-Type": "application/json"}
     salt = secrets.token_bytes(8)
