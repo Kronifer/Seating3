@@ -35,7 +35,7 @@ def login_user(db):
     if hash != user["hash"]["string"]:
         return {"status": "error", "msg": "username or password is invalid"}, 401, {"Content-Type": "application/json"}
     if not user["verified"]:
-        if db["verify"].get_collection("verify").find_one({"email": user["email"]}) is None:
+        if db["verify"].find_one({"email": user["email"]}) is None:
             generate_challenge(user["email"], "email")
         return (
             {"status": "error", "msg": "email has not been verified"},
