@@ -157,7 +157,7 @@ def verify(db):
     if code is None or code["scope"] != "email":
         return {"status": "error", "msg": "code is invalid or expired"}, 401, {"Content-Type": "application/json"}
     db["users"].update_one({"email": email}, {"$set": {"verified": True}})
-    db["verify"].delete_one({"code": code})
+    db["verify"].delete_one(code)
     return {"status": "success", "msg": "successfully verified email"}, 201, {"Content-Type": "application/json"}
 
 
@@ -189,6 +189,6 @@ def resetpass(db):
             h = user["hash"]
             h["string"] = hash
             db["users"].update_one({"email": email}, {"$set": {"hash": h}})
-            db["verify"].delete_one({"code": code["code"]})
+            db["verify"].delete_one(code)
             db["tokens"].delete_many({"username": user["username"]})
             return {"status": "success", "msg": "updated password"}, 200, {"Content-Type": "application/json"}
