@@ -24,6 +24,8 @@ def generate_challenge(email, scope):
     client = pymongo.MongoClient(mongouri)
     verify = client.get_database("seating").get_collection("verify")
     vcode = "".join([secrets.choice("0123456789") for _ in range(6)])
+    while verify.find_one({"code": vcode, "email": email}) is not None:
+        vcode = "".join([secrets.choice("0123456789") for _ in range(6)])
     verify.insert_one({"email": email, "code": vcode, "scope": scope, "createdAt": datetime.now()})
     subject = "Your Seating3 Verification Code" if scope != "passwordReset" else "Your Seating3 Password Reset Code"
     content = (
