@@ -4,6 +4,7 @@ from datetime import datetime
 from os import environ
 
 
+
 import pymongo
 from flask import Blueprint, request
 from ..utils import decorators
@@ -12,9 +13,9 @@ from ..utils import emails
 mongouri = f"mongodb://{environ["MONGO_USR"]}:{environ["MONGO_PASS"]}@{environ["MONGO_CONTAINER_NAME"]}:{environ["MONGO_PORT"]}/?authSource=admin"
 client = pymongo.MongoClient(mongouri)
 
-seating = Blueprint("events", __name__, url_prefix="/api/events")
+events = Blueprint("events", __name__, url_prefix="/api/events")
 
-@seating.route("/schedule", methods=["POST"])
+@events.route("/schedule", methods=["POST"])
 @decorators.authenticated
 def schedule_event(user):
     database = client.get_database("seating")
@@ -29,13 +30,15 @@ def schedule_event(user):
         "name":name,
         "eventId":event_id,
         "mustMatch":None,
+        "placements":{}, #username:[party size, tableIndex]
+        "tableMap":[], #(x, y, size)
         "registered":[]
     })
 
     return "Event successfully created", 201, {"Content-Type":"text/plain"}
 
 
-@seating.route("/delete", methods=["DELETE"])
+@events.route("/delete", methods=["DELETE"])
 @decorators.authenticated
 def delete_event(user):
     events = client.get_database("seating").get_collection("events")
@@ -57,7 +60,7 @@ def delete_event(user):
 
     return "Event deleted", 200, {"Content-Type":"text/plain"}
 
-@seating.route("/update", methods=["PATCH"])
+@events.route("/update", methods=["PATCH"])
 @decorators.authenticated
 def update_event(user):
     events = client.get_database("seating").get_collection("events")
@@ -73,16 +76,13 @@ def update_event(user):
         return "No such event exists, or you do not own this event", 404, {"Content-Type":"text/plain"}
 
 
-    #be aware! the "registered" is the people we want to REMOVE from the list, not keep
     new_event = {
-        'owner':event['owner'],
         'name':request.form.get('name', event['name']),
-        "eventId":event['id'],
         'mustMatch':request.form.get('mustMatch', event['mustMatch']),
         'registered':[item for item in event['registered'] if item in request.form.get('registered', [])]
     }
 
-    events.update_one({
+    events.find_one_and_update({
         "eventId":event_id,
         "owner":user['username']
     }, new_event)
@@ -93,7 +93,7 @@ def update_event(user):
 
 
 
-@seating.route("/register", methods=["POST"])
+@events.route("/register", methods=["POST"])
 @decorators.authenticated
 def register_event(user):
     database = client.get_database("seating")
