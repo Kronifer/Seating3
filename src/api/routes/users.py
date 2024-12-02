@@ -6,7 +6,7 @@ from os import environ
 from flask import Blueprint, request
 
 from ..utils import decorators
-from ..utils.funcs import send_email
+from ..utils.emails import generate_challenge
 
 users = Blueprint("users", __name__, url_prefix="/api/users")
 
@@ -14,43 +14,43 @@ users = Blueprint("users", __name__, url_prefix="/api/users")
 @users.route("/login", methods=["POST"])
 @decorators.access_database("users", "verify", "tokens")
 def login_user(db):
-    uname = request.form.get("username")
+    uname = request.form.get("username", None)
     pwd = request.form.get("pwd", None)
     if not all([uname, pwd]):
-        return "Bad Request", 400, {"Content-Type": "text/plain"}
+        err = []
+        if uname is None:
+            err.append("username")
+        if pwd is None:
+            err.append("pwd")
+        return (
+            {"status": "error", "msg": f"missing field(s): {", ".join(err)}"},
+            400,
+            {"Content-Type": "application/json"},
+        )
     user = db["users"].find_one({"username": uname})
     if user is None:
-        return "Username does not exist.", 400, {"Content-Type": "text/plain"}
-    if not user["verified"]:
-        return "Email has not been verified.", 401, {"Content-Type": "text/plain"}
+        return {"status": "error", "msg": "username or password is invalid"}, 401, {"Content-Type": "application/json"}
     hash = hashlib.sha3_512(bytes.fromhex(pwd) + bytes.fromhex(user["hash"]["salt"])).digest().hex()
     tstamp = datetime.now()
     if hash != user["hash"]["string"]:
-        return "Invalid password", 400, {"Content-Type": "text/plain"}
+        return {"status": "error", "msg": "username or password is invalid"}, 401, {"Content-Type": "application/json"}
     if not user["verified"]:
         if db["verify"].get_collection("verify").find_one({"email": user["email"]}) is None:
-            vcode = "".join([secrets.choice("1234567890") for _ in range(6)])
-            while verify.find_one({"code": vcode}) is not None:
-                vcode = "".join([secrets.choice("1234567890") for _ in range(6)])
-            send_email(
-                f"{environ['POSTFIX_USR']}@{environ['POSTFIX_DOMAIN']}",
-                user["email"],
-                "Seating3 Verification Code",
-                f"Verification Code: {vcode}. It will expire in one hour.",
-            )
-            db["verify"].insert_one({"email": user["email"], "code": vcode, "createdAt": datetime.now()})
-            return (
-                "User has not verified their email. Verification code has been resent.",
-                401,
-                {"Content-Type": "text/plain"},
-            )
-        else:
-            return "User has not verified their email.", 401, {"Content-Type": "text/plain"}
+            generate_challenge(user["email"], "email")
+        return (
+            {"status": "error", "msg": "email has not been verified"},
+            401,
+            {"Content-Type": "application/json"},
+        )
     token = secrets.token_hex(64)
     while db["tokens"].find_one({"token": token}) is not None:
         token = secrets.token_hex(64)
     db["tokens"].insert_one({"username": uname, "token": token, "timeCreated": tstamp})
-    return {"token": token, "expires_at": int(tstamp.timestamp()) + 3600}, 200, {"Content-Type": "application/json"}
+    return (
+        {"status": "success", "token": token, "expires_at": int(tstamp.timestamp()) + 3600},
+        200,
+        {"Content-Type": "application/json"},
+    )
 
 
 @users.route("/renewtoken", methods=["POST"])
@@ -58,7 +58,7 @@ def login_user(db):
 def update_token(db):
     token = request.headers.get("Authorization", None)
     if token is None:
-        return "Must supply a token to renew.", 400, {"Content-Type": "text/plain"}
+        return {"status": "error", "msg": "must supply an auth token"}, 401, {"Content-Type": "text/plain"}
     if db["tokens"].find_one({"token": request.headers["Authorization"]}) is None:
         return "Token does not exist or has expired.", 400, {"Content-Type": "text/plain"}
     db["tokens"].update_one({"token": request.headers["Authorization"]}, {"$set": {"timeCreated": datetime.now()}})
@@ -89,16 +89,7 @@ def create_user(db):
             "verified": False,
         }
     )
-    vcode = "".join([secrets.choice("1234567890") for _ in range(6)])
-    while db["verify"].find_one({"code": vcode}) is not None:
-        vcode = "".join([secrets.choice("1234567890") for _ in range(6)])
-    send_email(
-        f"{environ['POSTFIX_USR']}@{environ['POSTFIX_DOMAIN']}",
-        email,
-        "Seating3 Verification Code",
-        f"Verification Code: {vcode}. It will expire in one hour.",
-    )
-    db["verify"].insert_one({"email": email, "code": vcode, "createdAt": datetime.now(), "scope": "email"})
+    generate_challenge(email, "email")
     return "Successfully created user.", 202, {"Content-Type": "text/plain"}
 
 
@@ -125,18 +116,7 @@ def updateuser(user, db):
         if db["users"].find_one({"email": request.form.get("email")}) is not None:
             return "Email already in use.", 400, {"Content-Type": "text/plain"}
         updatedFields["email"] = request.form.get("email")
-        vcode = "".join([secrets.choice("1234567890") for _ in range(6)])
-        while db["verify"].find_one({"code": vcode}) is not None:
-            vcode = "".join([secrets.choice("1234567890") for _ in range(6)])
-        send_email(
-            f"{environ['POSTFIX_USR']}@{environ['POSTFIX_DOMAIN']}",
-            user["email"],
-            "Seating3 Verification Code",
-            f"Verification Code: {vcode}. It will expire in one hour.",
-        )
-        db["verify"].insert_one(
-            {"email": request.form.get("email"), "code": vcode, "createdAt": datetime.now(), "scope": "email"}
-        )
+        generate_challenge(request.form.get("email"), "email")
         updatedFields["verified"] = False
     db["users"].update_one({"username": user["username"]}, {"$set": updatedFields})
     return (
@@ -175,16 +155,8 @@ def resetpass(db):
             vcode = "".join([secrets.choice("1234567890") for _ in range(6)])
             while db["verify"].find_one({"code": vcode}) is not None:
                 vcode = "".join([secrets.choice("1234567890") for _ in range(6)])
-            send_email(
-                f"{environ['POSTFIX_USR']}@{environ['POSTFIX_DOMAIN']}",
-                email,
-                "Seating3 Password Reset Code",
-                f"Password Reset Code: {vcode}. It will expire in one hour.",
-            )
-            db["verify"].insert_one(
-                {"email": email, "code": vcode, "createdAt": datetime.now(), "scope": "passwordReset"}
-            )
-        return "Sent code to reset password if email exists in database.", 400, {"Content-Type": "text/plain"}
+            generate_challenge(email, "passwordReset")
+        return "Sent code to reset password if email exists in database.", 200, {"Content-Type": "text/plain"}
     else:
         code = db["verify"].find_one({"code": code})
         if code is None or code["scope"] != "passwordReset":
