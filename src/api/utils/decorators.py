@@ -33,19 +33,19 @@ def authenticated(func):
 
         token = request.headers.get("Authorization", None)
         if token is None:
-            return "This endpoint requires authorization.", 401, {"Content-Type": "text/plain"}
+            return {"status": "error", "msg": "this endpoint requires authorization"}, 401, {"Content-Type": "application/json"}
         token = tokens.find_one({"token": token})
         if token is None:
-            return "The supplied token is invalid or has expired.", 401, {"Content-Type": "text/plain"}
+            return {"status": "error", "msg": "the supplied token is invalid or expired"}, 401, {"Content-Type": "application/json"}
         user = users.find_one({"username": token.get("username")})
         if user is None:
             return (
-                "The token supplied is valid but the user associated with it does not exist or has been deleted.",
+                    {"status": "error", "msg": "the token supplied is valid but the user associated with it does not exist or has been deleted"},
                 401,
-                {"Content-Type": "text/plain"},
+                {"Content-Type": "application/json"},
             )
         if not user["verified"]:
-            return "The user has not yet verified their email.", 401, {"Content-Type": "text/plain"}
+            return {"status": "error", "msg": "this user has not verified their email"}, 401, {"Content-Type": "application/json"}
         return func(user, *args)
 
     return inner

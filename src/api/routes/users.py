@@ -35,7 +35,7 @@ def login_user(db):
     if hash != user["hash"]["string"]:
         return {"status": "error", "msg": "username or password is invalid"}, 401, {"Content-Type": "application/json"}
     if not user["verified"]:
-        if db["verify"].get_collection("verify").find_one({"email": user["email"]}) is None:
+        if db["verify"].find_one({"email": user["email"]}) is None:
             generate_challenge(user["email"], "email")
         return (
             {"status": "error", "msg": "email has not been verified"},
@@ -58,11 +58,11 @@ def login_user(db):
 def update_token(db):
     token = request.headers.get("Authorization", None)
     if token is None:
-        return {"status": "error", "msg": "must supply an auth token"}, 401, {"Content-Type": "text/plain"}
+        return {"status": "error", "msg": "must supply an auth token"}, 401, {"Content-Type": "application/json"}
     if db["tokens"].find_one({"token": request.headers["Authorization"]}) is None:
-        return "Token does not exist or has expired.", 400, {"Content-Type": "text/plain"}
+        return {"status": "error", "msg": "invalid token"}, 401, {"Content-Type": "application/json"}
     db["tokens"].update_one({"token": request.headers["Authorization"]}, {"$set": {"timeCreated": datetime.now()}})
-    return "Successfully updated token.", 200, {"Content-Type": "text/plain"}
+    return {"status": "success", "msg": "token renewed"}, 200, {"Content-Type": "application/json"}
 
 
 @users.route("/create", methods=["POST"])
@@ -71,13 +71,26 @@ def create_user(db):
     uname = request.form.get("username", None)
     pwd = request.form.get("pwd", None)
     name = request.form.get("name", None)
+    email = request.form.get("email", None)
     if not all([uname, pwd, name]):
-        return "Bad Request", 400, {"Content-Type": "text/plain"}
+        err = []
+        if uname is None:
+            err.append("username")
+        if pwd is None:
+            err.append("pwd")
+        if name is None:
+            err.append("name")
+        if email is None:
+            err.append("email")
+        return (
+            {"status": "error", "msg": f"missing field(s): {", ".join(err)}"},
+            400,
+            {"Content-Type": "application/json"},
+        )
     if db["users"].find_one({"username": uname}) is not None:
-        return "Username already exists.", 400, {"Content-Type": "text/plain"}
-    email = request.form["email"]
+        return {"status": "error", "msg": "username already exists"}, 409, {"Content-Type": "application/json"}
     if db["users"].find_one({"email": email}) is not None:
-        return "Email already exists.", 400, {"Content-Type": "text/plain"}
+        return {"status": "error", "msg": "email already exists"}, 409, {"Content-Type": "application/json"}
     salt = secrets.token_bytes(8)
     hash = hashlib.sha3_512(bytes.fromhex(pwd) + salt).digest().hex()
     db["users"].insert_one(
@@ -90,7 +103,7 @@ def create_user(db):
         }
     )
     generate_challenge(email, "email")
-    return "Successfully created user.", 202, {"Content-Type": "text/plain"}
+    return {"status": "success", "msg": "successfully created user"}, 202, {"Content-Type": "application/json"}
 
 
 @users.route("/getuser", methods=["GET"])
@@ -114,15 +127,15 @@ def updateuser(user, db):
         updatedFields["name"] = request.form.get("name")
     if request.form.get("email") is not None:
         if db["users"].find_one({"email": request.form.get("email")}) is not None:
-            return "Email already in use.", 400, {"Content-Type": "text/plain"}
+            return {"status": "error", "msg": "email already in use"}, 409, {"Content-Type": "application/json"}
         updatedFields["email"] = request.form.get("email")
         generate_challenge(request.form.get("email"), "email")
         updatedFields["verified"] = False
     db["users"].update_one({"username": user["username"]}, {"$set": updatedFields})
     return (
-        "Successfully updated user. If you changed your email, you will need to reverify.",
+        {"status": "success", "msg": "updated user. if email was updated, you will have to reverify"},
         200,
-        {"Content-Type": "text/plain"},
+        {"Content-Type": "application/json"},
     )
 
 
@@ -132,15 +145,22 @@ def verify(db):
     code = request.form.get("code", None)
     email = request.form.get("email", None)
     if not all([code, email]):
-        return "Bad Request", 401, {"Content-Type": "text/plain"}
-    code = db["verify"].find_one({"code": code})
+        err = []
+        if code is None:
+            err.append("code")
+        if email is None:
+            err.append("email")
+        return (
+            {"status": "err", "msg": f"missing field(s): {", ".join(err)}"},
+            400,
+            {"Content-Type": "application/json"},
+        )
+    code = db["verify"].find_one({"code": code, "email": email})
     if code is None or code["scope"] != "email":
-        return "The code supplied is invalid or has expired.", 401, {"Content-Type": "text/plain"}
-    if code["email"] != email:
-        return "The email supplied does not match the supplied code.", 401, {"Content-Type": "text/plain"}
+        return {"status": "error", "msg": "code is invalid or expired"}, 401, {"Content-Type": "application/json"}
     db["users"].update_one({"email": email}, {"$set": {"verified": True}})
-    db["verify"].delete_one({"code": code})
-    return "Successfully verified user.", 201, {"Content-Type": "text/plain"}
+    db["verify"].delete_one(code)
+    return {"status": "success", "msg": "successfully verified email"}, 201, {"Content-Type": "application/json"}
 
 
 @users.route("/resetpassword", methods=["POST"])
@@ -148,30 +168,29 @@ def verify(db):
 def resetpass(db):
     email = request.form.get("email", None)
     if email is None:
-        return "Bad Request", 400, {"Content-Type": "text/plain"}
+        return {"status": "error", "msg": "missing field: email"}, 400, {"Content-Type": "application/json"}
     code = request.form.get("code", None)
     if code is None:
         if db["users"].find_one({"email": email}) is not None:
-            vcode = "".join([secrets.choice("1234567890") for _ in range(6)])
-            while db["verify"].find_one({"code": vcode}) is not None:
-                vcode = "".join([secrets.choice("1234567890") for _ in range(6)])
             generate_challenge(email, "passwordReset")
-        return "Sent code to reset password if email exists in database.", 200, {"Content-Type": "text/plain"}
+        return (
+            {"status": "success", "msg": "sent reset code to email if it exists in db"},
+            200,
+            {"Content-Type": "application/json"},
+        )
     else:
-        code = db["verify"].find_one({"code": code})
+        code = db["verify"].find_one({"code": code, "email": email})
         if code is None or code["scope"] != "passwordReset":
-            return "The code supplied is invalid or has expired.", 401, {"Content-Type": "text/plain"}
-        if code["email"] != email:
-            return "The email supplied does not match the supplied code.", 401, {"Content-Type": "text/plain"}
+            return {"status": "error", "msg": "code is invalid or expired"}, 401, {"Content-Type": "application/json"}
         pwd = request.form.get("pwd", None)
         if pwd is None:
-            return "Bad Request", 400, {"Content-Type": "text/plain"}
+            return {"status": "error", "msg": "missing field: pwd"}, 401, {"Content-Type": "application/json"}
         else:
             user = db["users"].find_one({"email": email})
             hash = hashlib.sha3_512(bytes.fromhex(pwd) + bytes.fromhex(user["hash"]["salt"])).digest().hex()
             h = user["hash"]
             h["string"] = hash
             db["users"].update_one({"email": email}, {"$set": {"hash": h}})
-            db["verify"].delete_one({"code": code["code"]})
+            db["verify"].delete_one(code)
             db["tokens"].delete_many({"username": user["username"]})
-            return "Updated password.", 200, {"Content-Type": "text/plain"}
+            return {"status": "success", "msg": "updated password"}, 200, {"Content-Type": "application/json"}
