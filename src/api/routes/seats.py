@@ -8,16 +8,14 @@ from flask import Blueprint, request, jsonify
 from ..utils import decorators
 from ..utils.table import compute_remaining
 
-mongouri = f"mongodb://{environ["MONGO_USR"]}:{environ["MONGO_PASS"]}@{environ["MONGO_CONTAINER_NAME"]}:{environ["MONGO_PORT"]}/?authSource=admin"
-client = pymongo.MongoClient(mongouri)
-
 seats = Blueprint("seats", __name__, url_prefix="/api/seats")
 
 #{'eventId':'abc213', '}
 @seats.route("/reserveSeat", methods=['POST'])
+@decorators.access_database("events")
 @decorators.authenticated 
-def reserve_seat(user): #{eventId, tableIndex, partySize}
-    events = client.get_database("seating").get_collection("events")
+def reserve_seat(user, db): #{eventId, tableIndex, partySize}
+    events = db['events']
     event = events.find_one({
         "eventId":request.form['eventId'],
         "registered":{"$in":[user['username']]}
@@ -34,11 +32,13 @@ def reserve_seat(user): #{eventId, tableIndex, partySize}
         return "Not enough space", 409, {"Content-Type":"text/plain"}
 
     event['placements'][user['username']] = [partySize, tableIndex]
+    return "Seat Reserved", 201, {"Content-Type":"text/plain"}
 
 @seats.route("/getState", methods=['POST']) #post because we will probably have some easy api set up
+@decorators.access_database("events")
 @decorators.authenticated
-def get_state(user):
-    events = client.get_database("seating").get_collection("events")
+def get_state(user, db):
+    events = db['events']
     event = events.find_one({
         "eventId":request.form['eventId'],
         "registered":{"$in":[user['username']]}

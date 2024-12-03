@@ -4,22 +4,19 @@ from datetime import datetime
 from os import environ
 
 
-
+import json
 import pymongo
 from flask import Blueprint, request
 from ..utils import decorators
 from ..utils import emails
 
-mongouri = f"mongodb://{environ["MONGO_USR"]}:{environ["MONGO_PASS"]}@{environ["MONGO_CONTAINER_NAME"]}:{environ["MONGO_PORT"]}/?authSource=admin"
-client = pymongo.MongoClient(mongouri)
-
 events = Blueprint("events", __name__, url_prefix="/api/events")
 
 @events.route("/schedule", methods=["POST"])
+@decorators.access_database("events")
 @decorators.authenticated
-def schedule_event(user):
-    database = client.get_database("seating")
-    events = database.get_collection("events")
+def schedule_event(user, db):
+    events = db['events']
     name = request.form['name']
     event_id = secrets.token_hex(6)
     while events.find_one({"eventId":event_id}) is not None:
@@ -39,9 +36,10 @@ def schedule_event(user):
 
 
 @events.route("/delete", methods=["DELETE"])
+@decorators.access_database("events")
 @decorators.authenticated
-def delete_event(user):
-    events = client.get_database("seating").get_collection("events")
+def delete_event(user, db):
+    events = db['events']
 
     event_id = request.form['eventId']
     
@@ -60,10 +58,40 @@ def delete_event(user):
 
     return "Event deleted", 200, {"Content-Type":"text/plain"}
 
-@events.route("/update", methods=["PATCH"])
+@events.route("/arrange", methods=['POST'])
+@decorators.access_database("events")
 @decorators.authenticated
-def update_event(user):
-    events = client.get_database("seating").get_collection("events")
+def set_tables(user, db):
+    events = db['events']
+
+    event = events.find_one({
+        "eventId":request.form['eventId'],
+        "owner":user['username']
+    })
+    
+    tables = []
+
+    if event is None:
+        return "No such event exists, or you do not own this event", 404, {"Content-Type":"text/plain"}
+
+    for table in json.loads(request.form['tableEntries']): #[{"x":25, "y":50, "size":12}]
+        tables.append((table['x'], table['y'], table['size']))
+
+    events.find_one_and_update({
+        "eventId":request.form['eventId'],
+        "owner":user['username']
+    }, {"$set": {"tableMap":tables}})
+
+    return "Table map successfully created", 201, {"Content-Type":"text/plain"}
+
+
+
+
+@events.route("/update", methods=["PATCH"])
+@decorators.access_database("events")
+@decorators.authenticated
+def update_event(user, db):
+    events = db['events']
 
     event_id = request.form['eventId']
     
@@ -92,10 +120,10 @@ def update_event(user):
 
 
 @events.route("/register", methods=["POST"])
+@decorators.access_database("events")
 @decorators.authenticated
-def register_event(user):
-    database = client.get_database("seating")
-    events = database.get_collection("events")
+def register_event(user, db):
+    events = db['events']
     event_id = request.form['eventId']
 
     event = events.find_one({
@@ -114,7 +142,7 @@ def register_event(user):
 
     events.update_one({
         "eventId":event_id
-    }, event)
+    }, {"$set":event})
 
     return "Registered successfully", 200, {"Content-Type":"text/plain"}
 
