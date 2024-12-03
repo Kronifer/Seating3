@@ -3,7 +3,6 @@ import secrets
 from datetime import datetime
 from os import environ
 
-
 import pymongo
 from flask import Blueprint, request, jsonify
 from ..utils import decorators
@@ -12,10 +11,10 @@ from ..utils.table import compute_remaining
 mongouri = f"mongodb://{environ["MONGO_USR"]}:{environ["MONGO_PASS"]}@{environ["MONGO_CONTAINER_NAME"]}:{environ["MONGO_PORT"]}/?authSource=admin"
 client = pymongo.MongoClient(mongouri)
 
-placements = Blueprint("placements", __name__, url_prefix="/api/placements")
+seats = Blueprint("seats", __name__, url_prefix="/api/seats")
 
 #{'eventId':'abc213', '}
-@placements.on("/reserveSeat", methods=['POST'])
+@seats.route("/reserveSeat", methods=['POST'])
 @decorators.authenticated 
 def reserve_seat(user): #{eventId, tableIndex, partySize}
     events = client.get_database("seating").get_collection("events")
@@ -36,7 +35,7 @@ def reserve_seat(user): #{eventId, tableIndex, partySize}
 
     event['placements'][user['username']] = [partySize, tableIndex]
 
-@placements.on("/getState", methods=['POST']) #post because we will probably have some easy api set up
+@seats.route("/getState", methods=['POST']) #post because we will probably have some easy api set up
 @decorators.authenticated
 def get_state(user):
     events = client.get_database("seating").get_collection("events")

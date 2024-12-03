@@ -85,12 +85,10 @@ def update_event(user):
     events.find_one_and_update({
         "eventId":event_id,
         "owner":user['username']
-    }, new_event)
+    }, {"$set": new_event})
 
 
     return "Event updated", 202, {"Content-Type":"text/plain"}
-
-
 
 
 @events.route("/register", methods=["POST"])
