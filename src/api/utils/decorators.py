@@ -51,17 +51,39 @@ def authenticated(func):
     return inner
 
 
-def protected(f):
-    def inner(f):
-        security = request.headers.get("X-Security")
+rate_table = {
 
-        body_data = hashlib.sha256(request.get_data()).hexdigest()
-        sec_timeout = str(int(time.time()/60))
+}
 
-        sec_verification = hashlib.sha256((sec_timeout + body_data + "protected-seating-data").encode('ascii')).hexdigest()
+def rate_limited(func):
 
-        if security != sec_verification:
-            return "Unknown Message", 403, {"Content-Type":"text/plain"}
+    @wraps(func)
+    def inner(*args):
+        user_ip = request.headers.get("X-Forwarded-For", request.remote_addr)
 
-        return f()
+        limits = rate_table.get(request.path, {}) # {"1.1.1.1":[time.time(), time.time(), time.time()]}
+            
+        time_period = 30
+        request_limit = 5
+
+        ip_limits = limits.get(user_ip, [])
+            
+
+        for i in range(len(ip_limits))[::-1]:
+            ts = ip_limits[i]
+            if ts+time_period < time.time():
+                   del ip_limits[i]
+
+        if len(ip_limits) > request_limit:
+            return "You have been Rate Limited", 429, {"Content-Type":"text/plain"}
+            
+        ip_limits.append(time.time())
+
+
+        limits[user_ip] = ip_limits
+        rate_table[request.path] = limits
+
+        print(rate_table)
+
+        return func(*args)
     return inner

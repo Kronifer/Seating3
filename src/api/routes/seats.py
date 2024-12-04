@@ -42,6 +42,7 @@ def reserve_seat(user, db): #{eventId, tableIndex, partySize}
 
 @seats.route("/state", methods=['POST']) #post because we will probably have some easy api set up
 @decorators.access_database("events")
+@decorators.rate_limited
 @decorators.authenticated
 def get_state(user, db):
     events = db['events']
