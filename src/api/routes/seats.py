@@ -18,43 +18,49 @@ def reserve_seat(user, db): #{eventId, tableIndex, partySize}
     events = db['events']
     event = events.find_one({
         "eventId":request.form['eventId'],
-        "registered":{"$in":[user['username']]}
     })
+
     if event is None:
-        return "No such event exists, or you are not registered for this event", 404, {"Content-Type":"text/plain"}
+        return "No such event exists", 404, {"Content-Type":"text/plain"}
+    
+    if(user['username'] in event['regsitered'].keys()):
+        return "You are not registered for this event", 404, {"Content-Type":"text/plain"}
     
     tableIndex = int(request.form['tableIndex'])
     partySize = int(request.form['partySize'])
-    if tableIndex<0 or tableIndex > len(event['tableMap'])-1:
+    if tableIndex<0 or tableIndex > len(event['tables'])-1:
         return "No such table exists", 400, {"Content-Type":"text/plain"}
     
-    if compute_remaining(event['placements'], event['tableMap'], tableIndex) < partySize:
+    if compute_remaining(event['placements'], event['tables'], tableIndex) < partySize:
         return "Not enough space", 409, {"Content-Type":"text/plain"}
 
-    event['placements'][user['username']] = [partySize, tableIndex]
+    event['placements'][user['username']]['party'] = partySize
+    event['placements'][user['username']]['table'] = tableIndex
 
     events.update_one({
         "eventId":request.form['eventId'],
-        "registered":{"$in":[user['username']]}
     }, {"$set":{"placements":event['placements']}})
 
     return "Seat Reserved", 201, {"Content-Type":"text/plain"}
 
 @seats.route("/state", methods=['POST']) #post because we will probably have some easy api set up
 @decorators.access_database("events")
-@decorators.rate_limited
 @decorators.authenticated
 def get_state(user, db):
     events = db['events']
     event = events.find_one({
-        "eventId":request.form['eventId'],
-        "registered":{"$in":[user['username']]}
+        "eventId":request.form['eventId']
     })
+
     if event is None:
         return "No such event exists, or you are not registered for this event", 404, {"Content-Type":"text/plain"}
     
+    if(user['username'] in event['regsitered'].keys()):
+        return "You are not registered for this event", 404, {"Content-Type":"text/plain"}
+    
+
     modMap = [
-        (a[0], a[1], compute_remaining(event['placements'], event['tableMap'], i)) for i, a in enumerate(event['tableMap'])
+        (a[0], a[1], compute_remaining(event['placements'], event['tables'], i)) for i, a in enumerate(event['tables'])
     ]
 
     return jsonify(modMap)

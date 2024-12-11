@@ -28,8 +28,8 @@ def schedule_event(user, db):
         "eventId":event_id,
         "mustMatch":None,
         "placements":{}, #username:[party size, tableIndex]
-        "tableMap":[], #(x, y, size)
-        "registered":[]
+        "meals":{"drake meal":1},#beef:10
+        "tables":[] #(x, y, size)
     })
 
     return "Event successfully created", 201, {"Content-Type":"text/plain"}
@@ -80,7 +80,7 @@ def set_tables(user, db):
     events.find_one_and_update({
         "eventId":request.form['eventId'],
         "owner":user['username']
-    }, {"$set": {"tableMap":tables}})
+    }, {"$set": {"tables":tables}})
 
     return "Table map successfully created", 201, {"Content-Type":"text/plain"}
 
@@ -107,7 +107,7 @@ def update_event(user, db):
     new_event = {
         'name':request.form.get('name', event['name']),
         'mustMatch':request.form.get('mustMatch', event['mustMatch']),
-        'registered':[item for item in event['registered'] if item in request.form.get('registered', [])]
+        'registered':{item:value for item,value in event['registered'].items() if item in request.form.get('registered', [])}
     }
 
     events.find_one_and_update({
@@ -118,6 +118,63 @@ def update_event(user, db):
 
     return "Event updated", 202, {"Content-Type":"text/plain"}
 
+@events.route("/updateMeals", methods=['POST'])
+@decorators.access_database("events")
+@decorators.authenticated
+def update_meals(user, db):
+    events = db['events']
+    meals = request.form['meals']
+
+    event = events.find_one({
+        "eventId":request.form['eventId'],
+        "owner":user['username']
+    })
+
+    if event is None:
+        return "No such event exists, or you do not own this event", 404, {"Content-Type":"text/plain"}
+
+
+    event['meals'] = meals
+
+    return "Event Successfully Updated", 201, {"Content-Type":"text/plain"}
+
+
+
+@events.route("/chooseMeal", methods=["POST"])
+@decorators.access_database("events")
+@decorators.authenticated
+def choose_meal(user, db):
+
+    events = db['events']
+    event = events.find_one({
+        "eventId":request.form['eventId']
+    })
+
+
+    if event is None:
+        return "No such event exists", 404, {"Content-Type":"text/plain"}
+
+
+    if user['username'] not in event['registered'].keys():
+        return "You are not registered for this event", 404, {"Content-Type":"text/plain"}
+    
+
+    meal = event['meals'].get(request.form['meal'], 0)
+
+    if meal != None:
+        if meal <= 0:
+            return "Meal choice is invalid", 400, {"Content-Type":"text/plain"}
+    
+    old_meal = event['registered'][user['username']]['meal']
+
+    event['meals'][old_meal] += 1
+    event['meals'][meal] -= 1
+    
+    event['registered'][user['username']]['meal'] = request.form['meal']
+
+
+    return "Meal successfully updated", 201, {"Content-Type":"text/plain"}
+
 
 @events.route("/register", methods=["POST"])
 @decorators.access_database("events")
@@ -125,6 +182,7 @@ def update_event(user, db):
 def register_event(user, db):
     events = db['events']
     event_id = request.form['eventId']
+    meal = request.form['meal']
 
     event = events.find_one({
         "eventId":event_id
@@ -137,8 +195,15 @@ def register_event(user, db):
         if not emails.is_allowed(user['email'], event['mustMatch']):
             return "Email not allowed", 401, {"Content-Type":"text/plain"}
         
+    meal_val = event['meals'].get(meal, 0)
 
-    event['registered'].append(user['username'])
+    if meal_val <= 0:
+        return "Meal choice is invalid", 400, {"Content-Type":"text/plain"}
+    else:
+        if not meal_val == None:
+            event['meals'][meal] -= 1 
+    
+    event['registered'][user['username']] = {"party":None, "table":None, "meal":meal}
 
     events.update_one({
         "eventId":event_id

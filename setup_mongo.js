@@ -112,10 +112,6 @@ db.createCollection("users", {
               bsonType: 'string',
               description: '\'email\' must be present and it must be a valid email.',
               pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$'
-            },
-            createdEvents: {
-              bsonType: 'array',
-              description: 'An array of DBRefs to events the user has created.'
             }
           }
         }
@@ -124,7 +120,67 @@ db.createCollection("users", {
 );
 
 
-db.createCollection('events')
+db.createCollection('events', {
+  validator:{
+    $jsonSchema:{
+      bsonType:"object",
+      title:"Event Validation",
+      required:[
+        "owner",
+        "name",
+        "eventId",
+        "placements",
+        "meals",
+        "tables"
+      ],
+      properties:{
+        owner:{
+          bsonType:"string",
+          description:"The username of the owner of this event"
+        },
+        name:{
+          bsonType:"string",
+          description:"The name of this event, to be displayed to the user"
+        },
+        eventId:{
+          bsonType:"string",
+          description:"Internal ID to represent a unique event"
+        },
+        placements:{
+          bsonType:"object",
+          description:"list of people and their properties in the event",
+          required:[
+            "party",
+            "table",
+            "meal"
+          ],
+          properties:{
+            party:{
+              bsonType:"int",
+              description:"the amount of people that are in the event"
+            },
+            table:{
+              bsonType:"int",
+              description:"index of the table they are sitting at"
+            },
+            meal:{
+              bsonType:"array",
+              description:"array of string meal choices of the various attendees"
+            }
+          }
+        },
+        meals:{
+          bsonType:"object",
+          description:"key value pairs of meals and the amount they have"
+        },
+        tables:{
+          bsonType:"array",
+          description:"array of tuples that are (x,y,size) of the table"
+        }
+      }
+    }
+  }
+})
 
 db.getSiblingDB('admin').createUser({
     user: process.env.MONGO_INITDB_NEW_USERNAME,

@@ -3,7 +3,6 @@ from os import environ
 
 import pymongo
 import time
-import hashlib
 from flask import request
 
 mongouri = f"mongodb://{environ["MONGO_USR"]}:{environ["MONGO_PASS"]}@{environ["MONGO_CONTAINER_NAME"]}:{environ["MONGO_PORT"]}/?authSource=admin"
