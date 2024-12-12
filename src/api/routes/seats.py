@@ -6,7 +6,7 @@ from os import environ
 import pymongo
 from flask import Blueprint, request, jsonify
 from ..utils import decorators
-from ..utils.table import compute_remaining
+from ..utils.pmath import compute_remaining
 
 seats = Blueprint("seats", __name__, url_prefix="/api/seats")
 
@@ -43,7 +43,7 @@ def reserve_seat(user, db): #{eventId, tableIndex, partySize}
 
     return "Seat Reserved", 201, {"Content-Type":"text/plain"}
 
-@seats.route("/state", methods=['POST']) #post because we will probably have some easy api set up
+@seats.route("/state", methods=['GET'])
 @decorators.access_database("events")
 @decorators.authenticated
 def get_state(user, db):

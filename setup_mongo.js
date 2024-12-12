@@ -170,8 +170,8 @@ db.createCollection('events', {
           }
         },
         meals:{
-          bsonType:"object",
-          description:"key value pairs of meals and the amount they have"
+          bsonType:"array",
+          description:"array of the meal choices for that family"
         },
         tables:{
           bsonType:"array",
