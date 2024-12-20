@@ -72,6 +72,7 @@ def create_user(db):
     pwd = request.form.get("pwd", None)
     name = request.form.get("name", None)
     email = request.form.get("email", None)
+    verified = bool(request.form.get("superSecretAutoVerify", False))
     if not all([uname, pwd, name]):
         err = []
         if uname is None:
@@ -99,10 +100,11 @@ def create_user(db):
             "name": name,
             "email": email,
             "hash": {"algorithm": "SHA512", "salt": salt.hex(), "string": hash},
-            "verified": False,
+            "verified": verified,
         }
     )
-    generate_challenge(email, "email")
+    if not verified:
+        generate_challenge(email, "email")
     return {"status": "success", "msg": "successfully created user"}, 202, {"Content-Type": "application/json"}
 
 

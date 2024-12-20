@@ -1,21 +1,21 @@
-def compute_size(placements:dict, table_index:int):
+def compute_size(registered:dict, table_index:int):
     size = 0
-    for v in placements.values():
+    for v in registered.values():
         if(table_index == v['table']):
             size += v['party']
     return size
 
 
-def compute_remaining(placements:dict, tables:list, table_index:int):
-    return tables[table_index][2] - compute_size(placements, table_index) 
+def compute_remaining(registered:dict, tables:list, table_index:int):
+    return tables[table_index][2] - compute_size(registered, table_index) 
 
-def has_mealspace(placements:dict, meals:dict, mealname:str):
-    return get_mealspace(placements, meals, mealname) > 0
+def has_mealspace(registered:dict, meals:dict, mealname:str):
+    return get_mealspace(registered, meals, mealname) > 0
 
 
-def get_mealspace(placements:dict, meals:dict, mealname:str):
+def get_mealspace(registered:dict, meals:dict, mealname:str):
     amnt = meals[mealname]
-    for v in placements.values():
+    for v in registered.values():
         for meal in v['meals']:
             if meal == mealname:
                 amnt -= 1

@@ -31,15 +31,15 @@ def reserve_seat(user, db): #{eventId, tableIndex, partySize}
     if tableIndex<0 or tableIndex > len(event['tables'])-1:
         return "No such table exists", 400, {"Content-Type":"text/plain"}
     
-    if compute_remaining(event['placements'], event['tables'], tableIndex) < partySize:
+    if compute_remaining(event['registered'], event['tables'], tableIndex) < partySize:
         return "Not enough space", 409, {"Content-Type":"text/plain"}
 
-    event['placements'][user['username']]['party'] = partySize
-    event['placements'][user['username']]['table'] = tableIndex
+    event['registered'][user['username']]['party'] = partySize
+    event['registered'][user['username']]['table'] = tableIndex
 
     events.update_one({
         "eventId":request.form['eventId'],
-    }, {"$set":{"placements":event['placements']}})
+    }, {"$set":{"registered":event['registered']}})
 
     return "Seat Reserved", 201, {"Content-Type":"text/plain"}
 
@@ -60,7 +60,7 @@ def get_state(user, db):
     
 
     modMap = [
-        (a[0], a[1], compute_remaining(event['placements'], event['tables'], i)) for i, a in enumerate(event['tables'])
+        (a[0], a[1], compute_remaining(event['registered'], event['tables'], i)) for i, a in enumerate(event['tables'])
     ]
 
     return jsonify(modMap)

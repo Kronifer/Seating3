@@ -129,7 +129,7 @@ db.createCollection('events', {
         "owner",
         "name",
         "eventId",
-        "placements",
+        "registered",
         "meals",
         "tables"
       ],
@@ -146,13 +146,13 @@ db.createCollection('events', {
           bsonType:"string",
           description:"Internal ID to represent a unique event"
         },
-        placements:{
+        registered:{
           bsonType:"object",
           description:"list of people and their properties in the event",
           required:[
             "party",
             "table",
-            "meal"
+            "meals"
           ],
           properties:{
             party:{
@@ -181,6 +181,7 @@ db.createCollection('events', {
     }
   }
 })
+
 
 db.getSiblingDB('admin').createUser({
     user: process.env.MONGO_INITDB_NEW_USERNAME,

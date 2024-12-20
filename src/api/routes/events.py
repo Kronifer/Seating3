@@ -28,13 +28,23 @@ def schedule_event(user, db):
         "name":name,
         "eventId":event_id,
         "mustMatch":None,
-        "placements":{}, #username:[party size, tableIndex]
-        "meals":{"drake meal":1},#beef:10
+        "registered":{}, #username:[party size, tableIndex]
+        "meals":{"diddy meal":1},#beef:10
         "tables":[] #(x, y, size)
     })
 
     return "Event successfully created", 201, {"Content-Type":"text/plain"}
 
+@events.route("/list", methods=["GET"])
+@decorators.access_database("events")
+@decorators.authenticated
+def get_events(user, db):
+    events = db['events']
+    all_events =  events.find({
+        "owner":user['username']
+    })
+
+    return jsonify([event['eventId'] for event in all_events])
 
 @events.route("/delete", methods=["DELETE"])
 @decorators.access_database("events")
@@ -64,6 +74,7 @@ def delete_event(user, db):
 @decorators.authenticated
 def set_tables(user, db):
     events = db['events']
+    
 
     event = events.find_one({
         "eventId":request.form['eventId'],
@@ -74,6 +85,7 @@ def set_tables(user, db):
 
     if event is None:
         return "No such event exists, or you do not own this event", 404, {"Content-Type":"text/plain"}
+    
 
     for table in json.loads(request.form['tableEntries']): #[{"x":25, "y":50, "size":12}]
         tables.append((table['x'], table['y'], table['size']))
@@ -135,7 +147,10 @@ def update_meals(user, db):
         return "No such event exists, or you do not own this event", 404, {"Content-Type":"text/plain"}
 
 
-    event['meals'] = meals# {"beef mea":1, "chicken meal":5}
+    events.find_one_and_update({
+        "eventId":request.form['eventId'],
+        "owner":user['username']
+    }, {"$set":{"meals":({"diddy meal":1} | json.loads(meals))}})
 
     return "Event Successfully Updated", 201, {"Content-Type":"text/plain"}
 
@@ -161,10 +176,12 @@ def available_meals(user, db):
 
 
     for meal in event['meals'].keys():
-        if meal == "drake meal":
+        if meal == "diddy meal":
             continue
-        avail_meals[meal] = get_mealspace(event['placements'], events['meals'], meal)
+        avail_meals[meal] = get_mealspace(event['registered'], event['meals'], meal)
     
+    print(avail_meals)
+
     return jsonify(avail_meals)
 
 
@@ -178,7 +195,7 @@ def choose_meal(user, db):
         "eventId":request.form['eventId']
     })
 
-    new_meals = request.form['meals']
+    new_meals = json.loads(request.form['meals'])
 
 
     if event is None:
@@ -188,22 +205,26 @@ def choose_meal(user, db):
     if user['username'] not in event['registered'].keys():
         return "You are not registered for this event", 404, {"Content-Type":"text/plain"}
     
-    old_meals = event['placements'][user['username']]['meals']
-    event['placements'][user['username']]['meals'] = []
+    old_meals = event['registered'][user['username']]['meals']
+    event['registered'][user['username']]['meals'] = []
 
     meal_unavail = False
     for meal in new_meals:
-        if not has_mealspace(event['placements'], event['meals'], meal):
+        if not has_mealspace(event['registered'], event['meals'], meal):
             meal_unavail = True
     
 
-    event['placements'][user['username']]['meals'] = old_meals
+    event['registered'][user['username']]['meals'] = old_meals
 
     if meal_unavail:
         return "One or more meal options are unavailable", 400, {"Content-Type":"text/plain"}
         
     
-    event['placements'][user['username']]['meals'] = new_meals
+    event['registered'][user['username']]['meals'] = new_meals
+
+    events.find_one_and_update({
+        "eventId":request.form['eventId']
+    }, {"$set":event})
 
 
     return "Meal successfully updated", 201, {"Content-Type":"text/plain"}
