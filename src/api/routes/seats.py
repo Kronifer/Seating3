@@ -21,18 +21,18 @@ def reserve_seat(user, db): #{eventId, tableIndex, partySize}
     })
 
     if event is None:
-        return "No such event exists", 404, {"Content-Type":"text/plain"}
+        return  {"status":"error", "msg":"No such event exists"}, 404, {"Content-Type":"text/plain"}
     
     if(user['username'] in event['regsitered'].keys()):
-        return "You are not registered for this event", 404, {"Content-Type":"text/plain"}
+        return  {"status":"error", "msg":"You are not registered for this event"}, 404, {"Content-Type":"text/plain"}
     
     tableIndex = int(request.get_json()['tableIndex'])
     partySize = int(request.get_json()['partySize'])
     if tableIndex<0 or tableIndex > len(event['tables'])-1:
-        return "No such table exists", 400, {"Content-Type":"text/plain"}
+        return  {"status":"error", "msg":"No such table exists"}, 400, {"Content-Type":"text/plain"}
     
     if compute_remaining(event['registered'], event['tables'], tableIndex) < partySize:
-        return "Not enough space", 409, {"Content-Type":"text/plain"}
+        return  {"status":"error", "msg":"Not enough space"}, 409, {"Content-Type":"text/plain"}
 
     event['registered'][user['username']]['party'] = partySize
     event['registered'][user['username']]['table'] = tableIndex
@@ -41,7 +41,7 @@ def reserve_seat(user, db): #{eventId, tableIndex, partySize}
         "eventId":request.get_json()['eventId'],
     }, {"$set":{"registered":event['registered']}})
 
-    return "Seat Reserved", 201, {"Content-Type":"text/plain"}
+    return  {"status":"success", "msg":"Seat Reserved"}, 201, {"Content-Type":"text/plain"}
 
 @seats.route("/state", methods=['GET'])
 @decorators.access_database("events")
@@ -53,10 +53,10 @@ def get_state(user, db):
     })
 
     if event is None:
-        return "No such event exists, or you are not registered for this event", 404, {"Content-Type":"text/plain"}
+        return  {"status":"error", "msg":"No such event exists, or you are not registered for this event"}, 404, {"Content-Type":"text/plain"}
     
     if(user['username'] in event['regsitered'].keys()):
-        return "You are not registered for this event", 404, {"Content-Type":"text/plain"}
+        return  {"status":"error", "msg":"You are not registered for this event"}, 404, {"Content-Type":"text/plain"}
     
 
     modMap = [

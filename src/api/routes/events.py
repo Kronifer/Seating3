@@ -33,7 +33,7 @@ def schedule_event(user, db):
         "tables":[] #(x, y, size)
     })
 
-    return "Event successfully created", 201, {"Content-Type":"text/plain"}
+    return  {"status":"success", "msg":"Event successfully created"}, 201, {"Content-Type":"text/plain"}
 
 @events.route("/list", methods=["GET"])
 @decorators.access_database("events")
@@ -60,14 +60,14 @@ def delete_event(user, db):
     })
 
     if event is None:
-        return "No such event exists, or you do not own this event", 404, {"Content-Type":"text/plain"}
+        return  {"status":"error", "msg":"No such event exists, or you do not own this event"}, 404, {"Content-Type":"text/plain"}
 
     events.delete_one({
         "eventId":event_id,
         "owner":user['username']
     })
 
-    return "Event deleted", 200, {"Content-Type":"text/plain"}
+    return  {"status":"success", "msg":"Event deleted"}, 200, {"Content-Type":"text/plain"}
 
 @events.route("/arrange", methods=['POST'])
 @decorators.access_database("events")
@@ -84,7 +84,7 @@ def set_tables(user, db):
     tables = []
 
     if event is None:
-        return "No such event exists, or you do not own this event", 404, {"Content-Type":"text/plain"}
+        return  {"status":"error", "msg":"No such event exists, or you do not own this event"}, 404, {"Content-Type":"text/plain"}
     
 
     for table in json.loads(request.get_json()['tableEntries']): #[{"x":25, "y":50, "size":12}]
@@ -95,7 +95,7 @@ def set_tables(user, db):
         "owner":user['username']
     }, {"$set": {"tables":tables}})
 
-    return "Table map successfully created", 201, {"Content-Type":"text/plain"}
+    return  {"status":"success", "msg":"Table map successfully created"}, 201, {"Content-Type":"text/plain"}
 
 
 
@@ -114,7 +114,7 @@ def update_event(user, db):
     })
 
     if event is None:
-        return "No such event exists, or you do not own this event", 404, {"Content-Type":"text/plain"}
+        return  {"status":"error", "msg":"No such event exists, or you do not own this event"}, 404, {"Content-Type":"text/plain"}
 
 
     new_event = {
@@ -129,7 +129,7 @@ def update_event(user, db):
     }, {"$set": new_event})
 
 
-    return "Event updated", 202, {"Content-Type":"text/plain"}
+    return  {"status":"success", "msg":"Event updated"}, 202, {"Content-Type":"text/plain"}
 
 @events.route("/meals/options", methods=['POST'])
 @decorators.access_database("events")
@@ -144,7 +144,7 @@ def update_meals(user, db):
     })
 
     if event is None:
-        return "No such event exists, or you do not own this event", 404, {"Content-Type":"text/plain"}
+        return  {"status":"error", "msg":"No such event exists, or you do not own this event"}, 404, {"Content-Type":"text/plain"}
 
 
     events.find_one_and_update({
@@ -152,7 +152,7 @@ def update_meals(user, db):
         "owner":user['username']
     }, {"$set":{"meals":({"diddy meal":1} | json.loads(meals))}})
 
-    return "Event Successfully Updated", 201, {"Content-Type":"text/plain"}
+    return  {"status":"success", "msg":"Event Successfully Updated"}, 201, {"Content-Type":"text/plain"}
 
 
 
@@ -166,11 +166,11 @@ def available_meals(user, db):
     })
 
     if event is None:
-        return "No such event exists", 404, {"Content-Type":"text/plain"}
+        return  {"status":"error", "msg":"No such event exists"}, 404, {"Content-Type":"text/plain"}
 
 
     if user['username'] not in event['registered'].keys():
-        return "You are not registered for this event", 404, {"Content-Type":"text/plain"}
+        return  {"status":"error", "msg":"You are not registered for this event"}, 404, {"Content-Type":"text/plain"}
         
     avail_meals = {}
 
@@ -199,11 +199,11 @@ def choose_meal(user, db):
 
 
     if event is None:
-        return "No such event exists", 404, {"Content-Type":"text/plain"}
+        return  {"status":"error", "msg":"No such event exists"}, 404, {"Content-Type":"text/plain"}
 
 
     if user['username'] not in event['registered'].keys():
-        return "You are not registered for this event", 404, {"Content-Type":"text/plain"}
+        return  {"status":"error", "msg":"You are not registered for this event"}, 404, {"Content-Type":"text/plain"}
     
     old_meals = event['registered'][user['username']]['meals']
     event['registered'][user['username']]['meals'] = []
@@ -217,7 +217,7 @@ def choose_meal(user, db):
     event['registered'][user['username']]['meals'] = old_meals
 
     if meal_unavail:
-        return "One or more meal options are unavailable", 400, {"Content-Type":"text/plain"}
+        return  {"status":"error", "msg":"One or more meal options are unavailable"}, 400, {"Content-Type":"text/plain"}
         
     
     event['registered'][user['username']]['meals'] = new_meals
@@ -227,7 +227,7 @@ def choose_meal(user, db):
     }, {"$set":event})
 
 
-    return "Meal successfully updated", 201, {"Content-Type":"text/plain"}
+    return  {"status":"success", "msg":"Meal successfully updated"}, 201, {"Content-Type":"text/plain"}
 
 
 @events.route("/register", methods=["POST"])
@@ -242,11 +242,11 @@ def register_event(user, db):
     })
 
     if event is None:
-        return "No such event exists", 404, {"Content-Type":"text/plain"}
+        return  {"status":"error", "msg":"No such event exists"}, 404, {"Content-Type":"text/plain"}
 
     if event['mustMatch'] is not None:
         if not emails.is_allowed(user['email'], event['mustMatch']):
-            return "Email not allowed", 401, {"Content-Type":"text/plain"}
+            return  {"status":"error", "msg":"Email not allowed"}, 401, {"Content-Type":"text/plain"}
         
     
     event['registered'][user['username']] = {"party":None, "table":None, "meals":[]}
@@ -255,7 +255,7 @@ def register_event(user, db):
         "eventId":event_id
     }, {"$set":event})
 
-    return "Registered successfully", 200, {"Content-Type":"text/plain"}
+    return  {"status":"success", "msg":"Registered successfully"}, 200, {"Content-Type":"text/plain"}
 
 
 
@@ -270,11 +270,11 @@ def export_event(user, db):
 
 
     if event is None:
-        return "No such event exists", 404, {"Content-Type":"text/plain"}
+        return {"status":"error", "msg":"No such event exists"}, 404, {"Content-Type":"text/plain"}
 
 
     if user['username'] != event['owner']:
-        return "You are not the owner of this event", 404, {"Content-Type":"text/plain"}
+        return {"status":"error", "msg":"You are not the owner of this event"}, 404, {"Content-Type":"text/plain"}
 
     
     users = db['users']
@@ -295,7 +295,6 @@ def export_event(user, db):
     for username, props in event['registered'].items():
         buf = f"{user_lut[username]},{props['table']},{props['party']},{','.join(props['meals'])}"
         csvstr += f"{buf}\n"
-
 
     resp = make_response(csvstr)
     resp.content_type = 'text/csv'
