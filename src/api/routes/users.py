@@ -14,8 +14,8 @@ users = Blueprint("users", __name__, url_prefix="/api/users")
 @users.route("/login", methods=["POST"])
 @decorators.access_database("users", "verify", "tokens")
 def login_user(db):
-    uname = request.form.get("username", None)
-    pwd = request.form.get("pwd", None)
+    uname = request.get_json().get("username", None)
+    pwd = request.get_json().get("pwd", None)
     if not all([uname, pwd]):
         err = []
         if uname is None:
@@ -68,11 +68,11 @@ def update_token(db):
 @users.route("/create", methods=["POST"])
 @decorators.access_database("users", "verify")
 def create_user(db):
-    uname = request.form.get("username", None)
-    pwd = request.form.get("pwd", None)
-    name = request.form.get("name", None)
-    email = request.form.get("email", None)
-    verified = bool(request.form.get("superSecretAutoVerify", False))
+    uname = request.get_json().get("username", None)
+    pwd = request.get_json().get("pwd", None)
+    name = request.get_json().get("name", None)
+    email = request.get_json().get("email", None)
+    verified = bool(request.get_json().get("superSecretAutoVerify", False))
     if not all([uname, pwd, name]):
         err = []
         if uname is None:
@@ -122,16 +122,16 @@ def getuser(user):
 @decorators.authenticated
 def updateuser(user, db):
     updatedFields = {}
-    if request.form.get("username") is not None:
-        updatedFields["username"] = request.form.get("username")
-        db["tokens"].update_many({"username": user["username"]}, {"$set": {"username": request.form.get("username")}})
-    if request.form.get("name") is not None:
-        updatedFields["name"] = request.form.get("name")
-    if request.form.get("email") is not None:
-        if db["users"].find_one({"email": request.form.get("email")}) is not None:
+    if request.get_json().get("username") is not None:
+        updatedFields["username"] = request.get_json().get("username")
+        db["tokens"].update_many({"username": user["username"]}, {"$set": {"username": request.get_json().get("username")}})
+    if request.get_json().get("name") is not None:
+        updatedFields["name"] = request.get_json().get("name")
+    if request.get_json().get("email") is not None:
+        if db["users"].find_one({"email": request.get_json().get("email")}) is not None:
             return {"status": "error", "msg": "email already in use"}, 409, {"Content-Type": "application/json"}
-        updatedFields["email"] = request.form.get("email")
-        generate_challenge(request.form.get("email"), "email")
+        updatedFields["email"] = request.get_json().get("email")
+        generate_challenge(request.get_json().get("email"), "email")
         updatedFields["verified"] = False
     db["users"].update_one({"username": user["username"]}, {"$set": updatedFields})
     return (
@@ -144,8 +144,8 @@ def updateuser(user, db):
 @users.route("/verifyemail", methods=["POST"])
 @decorators.access_database("users", "verify")
 def verify(db):
-    code = request.form.get("code", None)
-    email = request.form.get("email", None)
+    code = request.get_json().get("code", None)
+    email = request.get_json().get("email", None)
     if not all([code, email]):
         err = []
         if code is None:
@@ -168,10 +168,10 @@ def verify(db):
 @users.route("/resetpassword", methods=["POST"])
 @decorators.access_database("verify", "users", "tokens")
 def resetpass(db):
-    email = request.form.get("email", None)
+    email = request.get_json().get("email", None)
     if email is None:
         return {"status": "error", "msg": "missing field: email"}, 400, {"Content-Type": "application/json"}
-    code = request.form.get("code", None)
+    code = request.get_json().get("code", None)
     if code is None:
         if db["users"].find_one({"email": email}) is not None:
             generate_challenge(email, "passwordReset")
@@ -184,7 +184,7 @@ def resetpass(db):
         code = db["verify"].find_one({"code": code, "email": email})
         if code is None or code["scope"] != "passwordReset":
             return {"status": "error", "msg": "code is invalid or expired"}, 401, {"Content-Type": "application/json"}
-        pwd = request.form.get("pwd", None)
+        pwd = request.get_json().get("pwd", None)
         if pwd is None:
             return {"status": "error", "msg": "missing field: pwd"}, 401, {"Content-Type": "application/json"}
         else:

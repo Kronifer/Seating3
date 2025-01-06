@@ -18,7 +18,7 @@ events = Blueprint("events", __name__, url_prefix="/api/events")
 @decorators.authenticated
 def schedule_event(user, db):
     events = db['events']
-    name = request.form['name']
+    name = request.get_json()['name']
     event_id = secrets.token_hex(6)
     while events.find_one({"eventId":event_id}) is not None:
         event_id = secrets.token_hex(6)
@@ -52,7 +52,7 @@ def get_events(user, db):
 def delete_event(user, db):
     events = db['events']
 
-    event_id = request.form['eventId']
+    event_id = request.get_json()['eventId']
     
     event = events.find_one({
         "eventId":event_id,
@@ -77,7 +77,7 @@ def set_tables(user, db):
     
 
     event = events.find_one({
-        "eventId":request.form['eventId'],
+        "eventId":request.get_json()['eventId'],
         "owner":user['username']
     })
     
@@ -87,11 +87,11 @@ def set_tables(user, db):
         return "No such event exists, or you do not own this event", 404, {"Content-Type":"text/plain"}
     
 
-    for table in json.loads(request.form['tableEntries']): #[{"x":25, "y":50, "size":12}]
+    for table in json.loads(request.get_json()['tableEntries']): #[{"x":25, "y":50, "size":12}]
         tables.append((table['x'], table['y'], table['size']))
 
     events.find_one_and_update({
-        "eventId":request.form['eventId'],
+        "eventId":request.get_json()['eventId'],
         "owner":user['username']
     }, {"$set": {"tables":tables}})
 
@@ -106,7 +106,7 @@ def set_tables(user, db):
 def update_event(user, db):
     events = db['events']
 
-    event_id = request.form['eventId']
+    event_id = request.get_json()['eventId']
     
     event = events.find_one({
         "eventId":event_id,
@@ -118,9 +118,9 @@ def update_event(user, db):
 
 
     new_event = {
-        'name':request.form.get('name', event['name']),
-        'mustMatch':request.form.get('mustMatch', event['mustMatch']),
-        'registered':{item:value for item,value in event['registered'].items() if item in request.form.get('registered', [])}
+        'name':request.get_json().get('name', event['name']),
+        'mustMatch':request.get_json().get('mustMatch', event['mustMatch']),
+        'registered':{item:value for item,value in event['registered'].items() if item in request.get_json().get('registered', [])}
     }
 
     events.find_one_and_update({
@@ -136,10 +136,10 @@ def update_event(user, db):
 @decorators.authenticated
 def update_meals(user, db):
     events = db['events']
-    meals = request.form['meals']
+    meals = request.get_json()['meals']
 
     event = events.find_one({
-        "eventId":request.form['eventId'],
+        "eventId":request.get_json()['eventId'],
         "owner":user['username']
     })
 
@@ -148,7 +148,7 @@ def update_meals(user, db):
 
 
     events.find_one_and_update({
-        "eventId":request.form['eventId'],
+        "eventId":request.get_json()['eventId'],
         "owner":user['username']
     }, {"$set":{"meals":({"diddy meal":1} | json.loads(meals))}})
 
@@ -162,7 +162,7 @@ def update_meals(user, db):
 def available_meals(user, db):
     events = db['events']
     event = events.find_one({
-        "eventId":request.form['eventId']
+        "eventId":request.get_json()['eventId']
     })
 
     if event is None:
@@ -192,10 +192,10 @@ def choose_meal(user, db):
 
     events = db['events']
     event = events.find_one({
-        "eventId":request.form['eventId']
+        "eventId":request.get_json()['eventId']
     })
 
-    new_meals = json.loads(request.form['meals'])
+    new_meals = json.loads(request.get_json()['meals'])
 
 
     if event is None:
@@ -223,7 +223,7 @@ def choose_meal(user, db):
     event['registered'][user['username']]['meals'] = new_meals
 
     events.find_one_and_update({
-        "eventId":request.form['eventId']
+        "eventId":request.get_json()['eventId']
     }, {"$set":event})
 
 
@@ -235,7 +235,7 @@ def choose_meal(user, db):
 @decorators.authenticated
 def register_event(user, db):
     events = db['events']
-    event_id = request.form['eventId']
+    event_id = request.get_json()['eventId']
 
     event = events.find_one({
         "eventId":event_id
@@ -257,3 +257,23 @@ def register_event(user, db):
 
     return "Registered successfully", 200, {"Content-Type":"text/plain"}
 
+
+
+@events.route("/export", methods=['GET'])
+@decorators.access_database("events")
+@decorators.authenticated
+def export_event(user, db):
+    events = db['events']
+    event = events.find_one({
+        "eventId":request.get_json()['eventId']
+    })
+
+    new_meals = json.loads(request.get_json()['meals'])
+
+
+    if event is None:
+        return "No such event exists", 404, {"Content-Type":"text/plain"}
+
+
+    if user['username'] != event['owner']:
+        return "You are not the owner of this event", 404, {"Content-Type":"text/plain"}
