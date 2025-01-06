@@ -6,7 +6,7 @@ from os import environ
 
 import json
 import pymongo
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, make_response
 from ..utils import decorators
 from ..utils import emails
 from ..utils.pmath import has_mealspace, get_mealspace
@@ -259,16 +259,14 @@ def register_event(user, db):
 
 
 
-@events.route("/export", methods=['GET'])
-@decorators.access_database("events")
+@events.route("/export_raw", methods=['GET'])
+@decorators.access_database("events", "users")
 @decorators.authenticated
 def export_event(user, db):
     events = db['events']
     event = events.find_one({
         "eventId":request.get_json()['eventId']
     })
-
-    new_meals = json.loads(request.get_json()['meals'])
 
 
     if event is None:
@@ -277,3 +275,30 @@ def export_event(user, db):
 
     if user['username'] != event['owner']:
         return "You are not the owner of this event", 404, {"Content-Type":"text/plain"}
+
+    
+    users = db['users']
+    user_objs = users.find({
+        "username":{
+            "$in":list(event['registered'].keys())
+        }
+    })
+
+
+    user_lut = {
+        u['username']:u['name'] for u in user_objs
+    }
+
+
+    csvstr = "name,table_id,party_size, ...meals\n"
+
+    for username, props in event['registered'].items():
+        buf = f"{user_lut[username]},{props['table']},{props['party']},{','.join(props['meals'])}"
+        csvstr += f"{buf}\n"
+
+
+    resp = make_response(csvstr)
+    resp.content_type = 'text/csv'
+    resp.status_code = 200
+
+    return resp
