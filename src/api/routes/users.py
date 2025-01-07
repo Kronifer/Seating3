@@ -223,7 +223,7 @@ def forgotusername(db):
             "noreply@seating3.dev",
             email,
             "Your Seating3 Username",
-            "Your username for Seating3 is: " + body["username"] + ".",
+            "Your username for Seating3 is: " + user["username"] + ".",
         )
         return (
             {
