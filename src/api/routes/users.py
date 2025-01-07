@@ -6,7 +6,7 @@ from os import environ
 from flask import Blueprint, request
 
 from ..utils import decorators
-from ..utils.emails import generate_challenge
+from ..utils.emails import generate_challenge, send_email
 
 users = Blueprint("users", __name__, url_prefix="/api/users")
 
@@ -199,3 +199,37 @@ def resetpass(db):
             db["verify"].delete_one(code)
             db["tokens"].delete_many({"username": user["username"]})
             return {"status": "success", "msg": "updated password"}, 200, {"Content-Type": "application/json"}
+
+
+@users.route("/forgotusername", methods=["GET"])
+@decorators.access_database("users")
+def forgotusername(db):
+    body = request.get_json()
+    email = body.get("email", None)
+    if email is None:
+        return {"status": "err", "msg": "missing required field: email"}, 400, {"Content-Type": "application/json"}
+    user = db["users"].find_one({"email": email})
+    if user is None:
+        return (
+            {
+                "status": "success",
+                "msg": "sent an email containing your username should your email exist in the database",
+            },
+            200,
+            {"Content-Type": "application/json"},
+        )
+    else:
+        send_email(
+            "noreply@seating3.dev",
+            email,
+            "Your Seating3 Username",
+            "Your username for Seating3 is: " + body["username"] + ".",
+        )
+        return (
+            {
+                "status": "success",
+                "msg": "sent an email containing your username should your email exist in the database",
+            },
+            200,
+            {"Content-Type": "application/json"},
+        )
