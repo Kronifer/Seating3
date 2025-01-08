@@ -101,7 +101,7 @@ def create_user(db):
             "name": name,
             "email": email,
             "hash": {"algorithm": "SHA512", "salt": salt.hex(), "string": hash},
-            "verified": verified,
+            "verified": False,
         }
     )
     if not verified:
