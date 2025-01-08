@@ -101,10 +101,11 @@ def create_user(db):
             "name": name,
             "email": email,
             "hash": {"algorithm": "SHA512", "salt": salt.hex(), "string": hash},
-            "verified": False,
+            "verified": verified,
         }
     )
-    generate_challenge(email, "email")
+    if not verified:
+        generate_challenge(email, "email")
     return {"status": "success", "msg": "successfully created user"}, 202, {"Content-Type": "application/json"}
 
 

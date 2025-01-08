@@ -34,3 +34,14 @@ def generate_challenge(email, scope):
         else f"Password Reset Code: {vcode}. It will expire in one hour."
     )
     send_email(f"{environ['POSTFIX_USR']}@{environ['POSTFIX_DOMAIN']}", email, subject, content)
+
+
+def is_allowed(email:str, domains:list[str]) -> bool:
+    email_domain = email.split("@")[1]
+    for domain in domains:
+        if domain.startswith("*."):
+            if domain[2:] in email_domain:
+                return True
+        if domain == email_domain:
+            return True
+    return False
