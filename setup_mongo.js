@@ -147,31 +147,33 @@ db.createCollection('events', {
           description:"Internal ID to represent a unique event"
         },
         registered:{
-          bsonType:"object",
+          bsonType:"array",
           description:"list of people and their properties in the event",
-          required:[
-            "party",
-            "table",
-            "meals"
-          ],
-          properties:{
-            party:{
-              bsonType:"int",
-              description:"the amount of people that are in the event"
-            },
-            table:{
-              bsonType:"int",
-              description:"index of the table they are sitting at"
-            },
-            meal:{
-              bsonType:"array",
-              description:"array of string meal choices of the various attendees"
+          items: {
+            required:[
+              "party",
+              "table",
+              "meals"
+            ],
+            properties:{
+              party:{
+                bsonType:"int",
+                description:"the amount of people that are in the event"
+              },
+              table:{
+                bsonType:"int",
+                description:"index of the table they are sitting at"
+              },
+              meals:{
+                bsonType:"array",
+                description:"array of the meal choices for that family"
+              }
             }
           }
         },
         meals:{
           bsonType:"array",
-          description:"array of the meal choices for that family"
+          description:"array of string meal choices of the various attendees"
         },
         tables:{
           bsonType:"array",
