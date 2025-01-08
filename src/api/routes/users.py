@@ -155,7 +155,7 @@ def verify(db):
         if email is None:
             err.append("email")
         return (
-            {"status": "err", "msg": f"missing field(s): {", ".join(err)}"},
+            {"status": "error", "msg": f"missing field(s): {", ".join(err)}"},
             400,
             {"Content-Type": "application/json"},
         )
@@ -207,7 +207,7 @@ def forgotusername(db):
     body = request.get_json()
     email = body.get("email", None)
     if email is None:
-        return {"status": "err", "msg": "missing required field: email"}, 400, {"Content-Type": "application/json"}
+        return {"status": "error", "msg": "missing required field: email"}, 400, {"Content-Type": "application/json"}
     user = db["users"].find_one({"email": email})
     if user is None:
         return (
