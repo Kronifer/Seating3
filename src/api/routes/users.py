@@ -6,7 +6,7 @@ from os import environ
 from flask import Blueprint, request
 
 from ..utils import decorators
-from ..utils.emails import generate_challenge
+from ..utils.emails import generate_challenge, send_email
 
 users = Blueprint("users", __name__, url_prefix="/api/users")
 
@@ -14,8 +14,9 @@ users = Blueprint("users", __name__, url_prefix="/api/users")
 @users.route("/login", methods=["POST"])
 @decorators.access_database("users", "verify", "tokens")
 def login_user(db):
-    uname = request.get_json().get("username", None)
-    pwd = request.get_json().get("pwd", None)
+    body = request.get_json()
+    uname = body.get("username", None)
+    pwd = body.get("pwd", None)
     if not all([uname, pwd]):
         err = []
         if uname is None:
@@ -68,11 +69,11 @@ def update_token(db):
 @users.route("/create", methods=["POST"])
 @decorators.access_database("users", "verify")
 def create_user(db):
-    uname = request.get_json().get("username", None)
-    pwd = request.get_json().get("pwd", None)
-    name = request.get_json().get("name", None)
-    email = request.get_json().get("email", None)
-    verified = bool(request.get_json().get("superSecretAutoVerify", False))
+    body = request.get_json()
+    uname = body.get("username", None)
+    pwd = body.get("pwd", None)
+    name = body.get("name", None)
+    email = body.get("email", None)
     if not all([uname, pwd, name]):
         err = []
         if uname is None:
@@ -121,17 +122,18 @@ def getuser(user):
 @decorators.access_database("users", "tokens")
 @decorators.authenticated
 def updateuser(user, db):
+    body = request.get_json()
     updatedFields = {}
-    if request.get_json().get("username") is not None:
-        updatedFields["username"] = request.get_json().get("username")
-        db["tokens"].update_many({"username": user["username"]}, {"$set": {"username": request.get_json().get("username")}})
-    if request.get_json().get("name") is not None:
-        updatedFields["name"] = request.get_json().get("name")
-    if request.get_json().get("email") is not None:
-        if db["users"].find_one({"email": request.get_json().get("email")}) is not None:
+    if body.get("username") is not None:
+        updatedFields["username"] = body.get("username")
+        db["tokens"].update_many({"username": user["username"]}, {"$set": {"username": body.get("username")}})
+    if body.get("name") is not None:
+        updatedFields["name"] = body.get("name")
+    if body.get("email") is not None:
+        if db["users"].find_one({"email": body.get("email")}) is not None:
             return {"status": "error", "msg": "email already in use"}, 409, {"Content-Type": "application/json"}
-        updatedFields["email"] = request.get_json().get("email")
-        generate_challenge(request.get_json().get("email"), "email")
+        updatedFields["email"] = body.get("email")
+        generate_challenge(body.get("email"), "email")
         updatedFields["verified"] = False
     db["users"].update_one({"username": user["username"]}, {"$set": updatedFields})
     return (
@@ -144,8 +146,9 @@ def updateuser(user, db):
 @users.route("/verifyemail", methods=["POST"])
 @decorators.access_database("users", "verify")
 def verify(db):
-    code = request.get_json().get("code", None)
-    email = request.get_json().get("email", None)
+    body = request.get_json()
+    code = body.get("code", None)
+    email = body.get("email", None)
     if not all([code, email]):
         err = []
         if code is None:
@@ -168,10 +171,11 @@ def verify(db):
 @users.route("/resetpassword", methods=["POST"])
 @decorators.access_database("verify", "users", "tokens")
 def resetpass(db):
-    email = request.get_json().get("email", None)
+    body = request.get_json()
+    email = body.get("email", None)
     if email is None:
         return {"status": "error", "msg": "missing field: email"}, 400, {"Content-Type": "application/json"}
-    code = request.get_json().get("code", None)
+    code = body.get("code", None)
     if code is None:
         if db["users"].find_one({"email": email}) is not None:
             generate_challenge(email, "passwordReset")
@@ -184,7 +188,7 @@ def resetpass(db):
         code = db["verify"].find_one({"code": code, "email": email})
         if code is None or code["scope"] != "passwordReset":
             return {"status": "error", "msg": "code is invalid or expired"}, 401, {"Content-Type": "application/json"}
-        pwd = request.get_json().get("pwd", None)
+        pwd = body.get("pwd", None)
         if pwd is None:
             return {"status": "error", "msg": "missing field: pwd"}, 401, {"Content-Type": "application/json"}
         else:
@@ -196,3 +200,37 @@ def resetpass(db):
             db["verify"].delete_one(code)
             db["tokens"].delete_many({"username": user["username"]})
             return {"status": "success", "msg": "updated password"}, 200, {"Content-Type": "application/json"}
+
+
+@users.route("/forgotusername", methods=["GET"])
+@decorators.access_database("users")
+def forgotusername(db):
+    body = request.get_json()
+    email = body.get("email", None)
+    if email is None:
+        return {"status": "err", "msg": "missing required field: email"}, 400, {"Content-Type": "application/json"}
+    user = db["users"].find_one({"email": email})
+    if user is None:
+        return (
+            {
+                "status": "success",
+                "msg": "sent an email containing your username should your email exist in the database",
+            },
+            200,
+            {"Content-Type": "application/json"},
+        )
+    else:
+        send_email(
+            "noreply@seating3.dev",
+            email,
+            "Your Seating3 Username",
+            "Your username for Seating3 is: " + user["username"] + ".",
+        )
+        return (
+            {
+                "status": "success",
+                "msg": "sent an email containing your username should your email exist in the database",
+            },
+            200,
+            {"Content-Type": "application/json"},
+        )
