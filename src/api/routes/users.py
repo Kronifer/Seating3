@@ -104,8 +104,7 @@ def create_user(db):
             "verified": False,
         }
     )
-    if not verified:
-        generate_challenge(email, "email")
+    generate_challenge(email, "email")
     return {"status": "success", "msg": "successfully created user"}, 202, {"Content-Type": "application/json"}
 
 
