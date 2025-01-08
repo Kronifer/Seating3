@@ -172,8 +172,8 @@ db.createCollection('events', {
           }
         },
         meals:{
-          bsonType:"array",
-          description:"array of string meal choices of the various attendees"
+          bsonType:"object",
+          description:"Dict containing the types of meals and quantity of meals"
         },
         tables:{
           bsonType:"array",
