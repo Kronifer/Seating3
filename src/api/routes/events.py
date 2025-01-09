@@ -192,9 +192,7 @@ def update_meals(user, db):
             {"Content-Type": "application/json"},
         )
 
-    events.find_one_and_update(
-        {"eventId": event_id, "owner": user["username"]}, {"$set": {"meals": (json.loads(meals))}}
-    )
+    events.find_one_and_update({"eventId": event_id, "owner": user["username"]}, {"$set": {"meals": meals}})
 
     return {"status": "success", "msg": "Event Successfully Updated"}, 201, {"Content-Type": "application/json"}
 
