@@ -32,7 +32,7 @@ def schedule_event(user, db):
             "eventId": event_id,
             "mustMatch": None,
             "registered": {},  # username:[party size, tableIndex]
-            "meals": {"diddy meal": 1},  # beef:10
+            "meals": {},  # beef:10
             "tables": [],  # (x, y, size)
         }
     )
