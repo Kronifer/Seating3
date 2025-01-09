@@ -24,7 +24,7 @@ def login_user(db):
         if pwd is None:
             err.append("pwd")
         return (
-            {"status": "error", "msg": f"missing field(s): {", ".join(err)}"},
+            {"status": "error", "msg": f"missing required field(s): {", ".join(err)}"},
             400,
             {"Content-Type": "application/json"},
         )
@@ -85,7 +85,7 @@ def create_user(db):
         if email is None:
             err.append("email")
         return (
-            {"status": "error", "msg": f"missing field(s): {", ".join(err)}"},
+            {"status": "error", "msg": f"missing required field(s): {", ".join(err)}"},
             400,
             {"Content-Type": "application/json"},
         )
@@ -155,7 +155,7 @@ def verify(db):
         if email is None:
             err.append("email")
         return (
-            {"status": "error", "msg": f"missing field(s): {", ".join(err)}"},
+            {"status": "error", "msg": f"missing required field(s): {", ".join(err)}"},
             400,
             {"Content-Type": "application/json"},
         )
@@ -173,7 +173,7 @@ def resetpass(db):
     body = request.get_json()
     email = body.get("email", None)
     if email is None:
-        return {"status": "error", "msg": "missing field: email"}, 400, {"Content-Type": "application/json"}
+        return {"status": "error", "msg": "missing required field: email"}, 400, {"Content-Type": "application/json"}
     code = body.get("code", None)
     if code is None:
         if db["users"].find_one({"email": email}) is not None:
@@ -189,7 +189,7 @@ def resetpass(db):
             return {"status": "error", "msg": "code is invalid or expired"}, 401, {"Content-Type": "application/json"}
         pwd = body.get("pwd", None)
         if pwd is None:
-            return {"status": "error", "msg": "missing field: pwd"}, 401, {"Content-Type": "application/json"}
+            return {"status": "error", "msg": "missing required field: pwd"}, 401, {"Content-Type": "application/json"}
         else:
             user = db["users"].find_one({"email": email})
             hash = hashlib.sha3_512(bytes.fromhex(pwd) + bytes.fromhex(user["hash"]["salt"])).digest().hex()
