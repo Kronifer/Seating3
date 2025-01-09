@@ -64,6 +64,7 @@ def get_event(user, db):
             404,
             {"Content-Type": "application/json"},
         )
+    del event["_id"]
     return event, 200, {"Content-Type": "application/json"}
 
 
