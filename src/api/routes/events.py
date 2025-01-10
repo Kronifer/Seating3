@@ -275,7 +275,7 @@ def choose_meal(user, db):
             {"Content-Type": "application/json"},
         )
 
-    if len(new_meals) > event["registered"][user["username"]]["partySize"]:
+    if len(new_meals) > event["registered"][user["username"]]["party"]:
         return {"status": "error", "msg": "You cannot have more meals than the size of your party"}, 400
 
     event["registered"][user["username"]]["meals"] = new_meals
