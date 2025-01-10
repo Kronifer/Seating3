@@ -275,6 +275,9 @@ def choose_meal(user, db):
             {"Content-Type": "application/json"},
         )
 
+    if len(new_meals) > event["registered"][user["username"]]["partySize"]:
+        return {"status": "error", "msg": "You cannot have more meals than the size of your party"}, 400
+
     event["registered"][user["username"]]["meals"] = new_meals
 
     events.find_one_and_update({"eventId": event_id}, {"$set": event})
