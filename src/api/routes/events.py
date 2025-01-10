@@ -54,7 +54,7 @@ def get_events(user, db):
 @decorators.access_database("events")
 @decorators.authenticated
 def get_event(user, db):
-    event_id = request.args.get("eventId", None)
+    event_id = request.get_json().get("eventId", None)
     if event_id is None:
         return {"status": "error", "msg": "missing required field: eventId"}, 400, {"Content-Type": "application/json"}
     event = db["events"].find_one({"eventId": event_id, "owner": user["username"]})
