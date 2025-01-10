@@ -15,7 +15,9 @@ def has_mealspace(registered: dict, meals: dict, mealname: str):
 
 
 def get_mealspace(registered: dict, meals: dict, mealname: str):
-    amnt = meals[mealname]
+    amnt = meals.get(mealname, None)
+    if amnt is None:
+        return 0
     if amnt == -1:  # Infinite meal
         return 999
     for v in registered.values():
