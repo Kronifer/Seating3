@@ -346,3 +346,32 @@ def export_event(user, db):
     resp.status_code = 200
 
     return resp
+
+
+@events.route("/invite", methods=["POST"])
+@decorators.access_database("events", "users")
+@decorators.authenticated
+def invite(user, db):
+    body = request.get_json()
+    invite_emails = body.get("emails", None)
+    event_id = body.get("eventId", None)
+    if any([emails, event_id]) is None:
+        err = []
+        if event_id is None:
+            err.append("eventId")
+        if invite_emails is None:
+            err.append("emails")
+        return {"status": "error", "msg": f"missing required field(s): {", ".join(err)}"}, 400
+    event = db["events"].find_one({"eventId": event_id})
+    if event is None:
+        return {"status": "error", "msg": "No such event exists"}, 400
+    if event["owner"] != user["username"]:
+        return {"status": "error", "msg": "You are not the owner of this event"}, 400
+    for email in invite_emails:
+        msg1 = f"You've been invited by {user["name"]} to join the event {event["name"]}. Join from the user dashboard using the the event ID: {event_id}."
+        msg2 = f"You've been invited by {user["name"]} to join the event {event["name"]} on Seating3. Join the event by registering and joining from the user dashboard using the the event ID: {event_id}."
+        if db["users"].find_one({"email": email}) is None:
+            emails.send_email("noreply@seating3.dev", email, "You've been invited to an event on Seating3!", msg2)
+        else:
+            emails.send_email("noreply@seating3.dev", email, "You've been invited to an event on Seating3!", msg1)
+        return {"status": "success", "msg": "Successfully invited the provided emails to event"}, 200
