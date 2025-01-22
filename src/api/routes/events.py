@@ -233,6 +233,7 @@ def available_meals(user, db):
 def choose_meal(user, db):
     event_id = request.get_json().get("eventId", None)
     new_meals = request.get_json().get("meals", None)
+    special_notes = request.get_json().get("notes", None)
     if any([new_meals, event_id]) is None:
         err = []
         if event_id is None:
@@ -279,6 +280,8 @@ def choose_meal(user, db):
         return {"status": "error", "msg": "You cannot have more meals than the size of your party"}, 400
 
     event["registered"][user["username"]]["meals"] = new_meals
+    if special_notes is not None:
+        event["registered"][user["username"]]["notes"] = special_notes
 
     events.find_one_and_update({"eventId": event_id}, {"$set": event})
 
@@ -335,10 +338,18 @@ def export_event(user, db):
 
     user_lut = {u["username"]: u["name"] for u in user_objs}
 
-    csvstr = "name,table_id,party_size, ...meals\n"
+    csvstr = "name,table_id,party_size,"
+    for i in event["meals"].keys():
+        csvstr += f"meal: {i},"
+    csvstr = csvstr[:-1]
 
     for username, props in event["registered"].items():
-        buf = f"{user_lut[username]},{props['table']},{props['party']},{','.join(props['meals'])}"
+        meals = {i: 0 for i in event["meals"].keys()}
+        for i in props["meals"]:
+            if i not in event["meals"].keys():
+                continue
+            meals[i] += 1
+        buf = f"{user_lut[username]},{props['table']},{props['party']},{','.join(meals.values())}"
         csvstr += f"{buf}\n"
 
     resp = make_response(csvstr)
