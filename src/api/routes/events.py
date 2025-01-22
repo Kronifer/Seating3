@@ -1,3 +1,4 @@
+import datetime
 import hashlib
 import json
 import secrets
@@ -19,8 +20,18 @@ events = Blueprint("events", __name__, url_prefix="/api/events")
 def schedule_event(user, db):
     events = db["events"]
     name = request.get_json().get("name", None)
-    if name is None:
-        return {"status": "error", "msg": "missing required field: name"}, 400, {"Content-Type": "application/json"}
+    date = request.get_json().get("date", None)
+    if any([name, date]) is None:
+        err = []
+        if name is None:
+            err.append("name")
+        if date is None:
+            err.append("date")
+        return (
+            {"status": "error", "msg": f"missing required field(s): {",".join(err)}"},
+            400,
+            {"Content-Type": "application/json"},
+        )
     event_id = secrets.token_hex(6)
     while events.find_one({"eventId": event_id}) is not None:
         event_id = secrets.token_hex(6)
@@ -34,6 +45,7 @@ def schedule_event(user, db):
             "registered": {},  # username:[party size, tableIndex]
             "meals": {},  # beef:10
             "tables": [],  # (x, y, size)
+            "date": datetime.datetime.fromtimestamp(date),
         }
     )
 
@@ -47,7 +59,7 @@ def get_events(user, db):
     events = db["events"]
     all_events = events.find({"owner": user["username"]})
 
-    return jsonify([event["eventId"] for event in all_events])
+    return jsonify([{"eventId": event["eventId"], "name": event["name"]} for event in all_events])
 
 
 @events.route("/get", methods=["GET"])

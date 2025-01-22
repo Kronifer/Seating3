@@ -131,7 +131,8 @@ db.createCollection('events', {
         "eventId",
         "registered",
         "meals",
-        "tables"
+        "tables",
+        "date"
       ],
       properties:{
         owner:{
@@ -157,6 +158,10 @@ db.createCollection('events', {
         tables:{
           bsonType:"array",
           description:"array of tuples that are (x,y,size) of the table"
+        },
+        date:{
+          bsonType:"date",
+          description:"date of event"
         }
       }
     }
