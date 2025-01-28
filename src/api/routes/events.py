@@ -1,4 +1,3 @@
-import datetime
 import hashlib
 import json
 import secrets
@@ -21,6 +20,7 @@ def schedule_event(user, db):
     events = db["events"]
     name = request.get_json().get("name", None)
     date = request.get_json().get("date", None)
+    register_by = request.get_json().get("rsvpBy", None)
     if any([name, date]) is None:
         err = []
         if name is None:
@@ -36,6 +36,8 @@ def schedule_event(user, db):
     while events.find_one({"eventId": event_id}) is not None:
         event_id = secrets.token_hex(6)
 
+    rsvp = datetime.fromtimestamp(register_by) if register_by is not None else None
+
     events.insert_one(
         {
             "owner": user["username"],
@@ -45,7 +47,8 @@ def schedule_event(user, db):
             "registered": {},  # username:[party size, tableIndex]
             "meals": {},  # beef:10
             "tables": [],  # (x, y, size)
-            "date": datetime.datetime.fromtimestamp(date),
+            "date": datetime.fromtimestamp(date),
+            "rsvpBy": rsvp,
         }
     )
 
@@ -317,6 +320,10 @@ def register_event(user, db):
     if event["mustMatch"] is not None:
         if not emails.is_allowed(user["email"], event["mustMatch"]):
             return {"status": "error", "msg": "Email not allowed"}, 401, {"Content-Type": "application/json"}
+
+    t = datetime.now()
+    if t.timestamp() >= event["rsvpBy"].timestamp():
+        return {"status": "error", "msg": "You can no longer register for this event"}, 400
 
     event["registered"][user["username"]] = {"party": None, "table": None, "meals": []}
 
