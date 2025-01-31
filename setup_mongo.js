@@ -162,11 +162,17 @@ db.createCollection('events', {
         date:{
           bsonType:"date",
           description:"date of event"
+        },
+        rsvpBy:{
+          bsonType:"date",
+          description:"Date users must register by"
         }
       }
     }
   }
 })
+
+db.events.createIndex({"date":1}, {expireAfterSeconds: 604800})
 
 
 db.getSiblingDB('admin').createUser({

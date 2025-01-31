@@ -322,7 +322,7 @@ def register_event(user, db):
             return {"status": "error", "msg": "Email not allowed"}, 401, {"Content-Type": "application/json"}
 
     t = datetime.now()
-    if t.timestamp() >= event["rsvpBy"].timestamp():
+    if event["rsvpBy"] is not None and t.timestamp() >= event["rsvpBy"].timestamp():
         return {"status": "error", "msg": "You can no longer register for this event"}, 400
 
     event["registered"][user["username"]] = {"party": None, "table": None, "meals": []}
