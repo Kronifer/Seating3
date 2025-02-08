@@ -4,8 +4,12 @@ import { Card, CardBody, CardFooter } from "@heroui/card";
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { Divider } from "@heroui/divider";
+import { useState } from "react";
 
 export default function LoginPage() {
+  const [userName, setUserName] = useState("");
+  const [pwd, setPwd] = useState("");
+
   return (
     <>
       <span className="text-4xl">Sign in to </span>
@@ -14,12 +18,11 @@ export default function LoginPage() {
       </span>
       <br />
       <br />
-      <Card className="w-full">
+      <Card className="w-1/3 inline-block">
         <CardBody>
           <Form className="gap-4" validationBehavior="native">
             <Input
               isRequired
-              id="username"
               label="Username"
               labelPlacement="outside"
               name="username"
@@ -29,14 +32,14 @@ export default function LoginPage() {
                 if (value.length < 5) {
                   return "Username must be at least 5 characters long.";
                 }
-                (
-                  document.getElementById("submit") as HTMLButtonElement
-                ).disabled = true;
+              }}
+              value={userName}
+              onChange={(e) => {
+                setUserName((userName) => e.target.value);
               }}
             />
             <Input
               isRequired
-              id="password"
               label="Password"
               labelPlacement="outside"
               name="password"
@@ -47,11 +50,14 @@ export default function LoginPage() {
                   return "Password must be at least 8 characters long.";
                 }
               }}
+              value={pwd}
+              onChange={(e) => {
+                setPwd((pwd) => e.target.value);
+              }}
             />
             <Button
               className="w-full text-white font-semibold text-base"
               color="success"
-              id="submit"
               type="submit"
             >
               Login
@@ -60,8 +66,9 @@ export default function LoginPage() {
         </CardBody>
         <Divider />
         <CardBody>
-          <div className="flex gap-2 justify-center">
+          <div className="flex gap-2 justify-center w-full">
             <Button
+              className="w-1/2"
               variant="flat"
               onPress={(_) => {
                 location.href = "/forgot-username";
@@ -70,6 +77,7 @@ export default function LoginPage() {
               Forgot Username?
             </Button>
             <Button
+              className="w-1/2"
               variant="flat"
               onPress={(_) => {
                 location.href = "/reset-password";
@@ -80,7 +88,7 @@ export default function LoginPage() {
           </div>
         </CardBody>
         <Divider />
-        <CardFooter>
+        <CardFooter className="justify-center">
           <p>
             Don't have an account for Seating3?{" "}
             <a
