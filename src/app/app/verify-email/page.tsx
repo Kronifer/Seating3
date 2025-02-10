@@ -1,17 +1,31 @@
+"use client";
 import { Card, CardBody, CardFooter } from "@heroui/card";
 import { Divider } from "@heroui/divider";
 import { InputOtp } from "@heroui/input-otp";
 import { Form } from "@heroui/form";
 import { Button } from "@heroui/button";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
-export let email = "runkedillon@gmail.com";
 export default function VerifyPage() {
+  const [email, setEmail] = useState("");
+  const router = useRouter();
+
+  useEffect(() => {
+    setEmail(
+      sessionStorage.getItem("email") ? sessionStorage.getItem("email")! : "",
+    );
+    if (document.referrer != location.origin + "/register") {
+      router.push("/");
+    }
+  });
+
   return (
     <>
       <span className="text-4xl">Verify your email to continue</span>
       <br />
       <br />
-      <Card className="w-full">
+      <Card className="w-3/4 items-center inline-block">
         <CardBody className="items-center">
           <Form className="items-center" validationBehavior="native">
             <InputOtp

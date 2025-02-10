@@ -1,10 +1,13 @@
 "use client";
+import { createHash } from "crypto";
+
 import { Form } from "@heroui/form";
 import { Card, CardBody, CardFooter } from "@heroui/card";
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import { Divider } from "@heroui/divider";
+import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
   const [formStep, setFormStep] = useState(0);
@@ -13,6 +16,69 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [userName, setUserName] = useState("");
   const [pwd, setPwd] = useState("");
+  const [usernameInvalid, setUsernameInvalid] = useState(false);
+  const [emailInvalid, setEmailInvalid] = useState(false);
+  const router = useRouter();
+
+  const submit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const hash = createHash("sha512");
+
+    hash.update(pwd);
+    await fetch("/api/users/create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: email,
+        username: userName,
+        pwd: hash.digest("hex"),
+        name: firstName + " " + lastName,
+      }),
+    })
+      .then((resp) =>
+        resp.json().then((data) => ({ status: resp.status, json: data })),
+      )
+      .then((r) => {
+        if (r.status === 409 && r.json.msg.includes("username")) {
+          setUsernameInvalid((usernameInvalid) => true);
+          const a = setInterval(() => {
+            (
+              document.getElementById("username")! as HTMLInputElement
+            ).reportValidity();
+            if (
+              (
+                document.getElementById("username")! as HTMLInputElement
+              ).getAttribute("aria-invalid") == "true"
+            ) {
+              setUsernameInvalid((usernameInvalid) => false);
+              clearInterval(a);
+            }
+          }, 50);
+        }
+        if (r.status === 409 && r.json.msg.includes("email")) {
+          setEmailInvalid((emailInvalid) => true);
+          const a = setInterval(() => {
+            (
+              document.getElementById("email")! as HTMLInputElement
+            ).reportValidity();
+            if (
+              (
+                document.getElementById("email")! as HTMLInputElement
+              ).getAttribute("aria-invalid") == "true"
+            ) {
+              setEmailInvalid((emailInvalid) => false);
+              clearInterval(a);
+            }
+          }, 50);
+        }
+        if (r.status === 202) {
+          window.sessionStorage.setItem("email", email);
+          location.href = "/verify-email";
+        }
+      });
+  };
 
   return (
     <>
@@ -67,18 +133,26 @@ export default function RegisterPage() {
             </Form>
           )}
           {formStep == 1 && (
-            <Form className="gap-4" validationBehavior="native">
+            <Form
+              className="gap-4"
+              validationBehavior="native"
+              onSubmit={submit}
+            >
               <Input
                 isRequired
+                id="username"
                 label="Username"
                 labelPlacement="outside"
                 name="username"
                 placeholder=" "
                 type="text"
                 validate={(value) => {
-                    if (value.length < 5) {
-                      return "Username must be at least 5 characters long.";
-                    }
+                  if (usernameInvalid) {
+                    return "Username already in use.";
+                  }
+                  if (value.length < 5) {
+                    return "Username must be at least 5 characters long.";
+                  }
                 }}
                 value={userName}
                 onChange={(e) => {
@@ -87,11 +161,17 @@ export default function RegisterPage() {
               />
               <Input
                 isRequired
+                id="email"
                 label="Email"
                 labelPlacement="outside"
                 name="email"
                 placeholder=" "
                 type="email"
+                validate={(value) => {
+                  if (emailInvalid) {
+                    return "Email already in use.";
+                  }
+                }}
                 value={email}
                 onChange={(e) => {
                   setEmail((email) => e.target.value);
@@ -105,9 +185,9 @@ export default function RegisterPage() {
                 placeholder=" "
                 type="password"
                 validate={(value) => {
-                    if (value.length < 8) {
-                        return "Password must be at least 8 characters long.";
-                    }
+                  if (value.length < 8) {
+                    return "Password must be at least 8 characters long.";
+                  }
                 }}
                 value={pwd}
                 onChange={(e) => {

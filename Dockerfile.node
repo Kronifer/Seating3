@@ -1,0 +1,6 @@
+FROM node:alpine
+WORKDIR /site
+COPY ./src/app /site
+RUN npm install
+RUN npm run build
+ENTRYPOINT ["npm", "run", "start"]

@@ -5,10 +5,12 @@ import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { Divider } from "@heroui/divider";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [userName, setUserName] = useState("");
   const [pwd, setPwd] = useState("");
+  const router = useRouter();
 
   return (
     <>
@@ -71,7 +73,7 @@ export default function LoginPage() {
               className="w-1/2"
               variant="flat"
               onPress={(_) => {
-                location.href = "/forgot-username";
+                router.push("/forgot-username");
               }}
             >
               Forgot Username?
@@ -80,7 +82,7 @@ export default function LoginPage() {
               className="w-1/2"
               variant="flat"
               onPress={(_) => {
-                location.href = "/reset-password";
+                router.push("/reset-password");
               }}
             >
               Forgot Password?

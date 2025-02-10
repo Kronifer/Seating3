@@ -89,10 +89,13 @@ def create_user(db):
             400,
             {"Content-Type": "application/json"},
         )
+    invalid = []
     if db["users"].find_one({"username": uname}) is not None:
-        return {"status": "error", "msg": "username already exists"}, 409, {"Content-Type": "application/json"}
+        invalid.append("username")
     if db["users"].find_one({"email": email}) is not None:
-        return {"status": "error", "msg": "email already exists"}, 409, {"Content-Type": "application/json"}
+        invalid.append("email")
+    if len(invalid) != 0:
+        return {"status": "error", "msg": f"invalid field(s): {", ".join(invalid)}"}, 409
     salt = secrets.token_bytes(8)
     hash = hashlib.sha3_512(bytes.fromhex(pwd) + salt).digest().hex()
     db["users"].insert_one(
