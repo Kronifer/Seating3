@@ -15,7 +15,7 @@ export default function VerifyPage() {
     setEmail(
       sessionStorage.getItem("email") ? sessionStorage.getItem("email")! : "",
     );
-    if (document.referrer != location.origin + "/register") {
+    if (document.referrer != location.origin + "/register" || email === "") {
       router.push("/");
     }
   });
@@ -26,8 +26,8 @@ export default function VerifyPage() {
       <br />
       <br />
       <Card className="w-3/4 items-center inline-block">
+        <Form className="items-center" validationBehavior="native">
         <CardBody className="items-center">
-          <Form className="items-center" validationBehavior="native">
             <InputOtp
               isRequired
               id="code"
@@ -37,15 +37,18 @@ export default function VerifyPage() {
               textAlign="center"
               variant="underlined"
             />
-            <Button
-              className="text-white font-base font-semibold w-full"
-              color="success"
+            </CardBody>
+            <Divider />
+            <CardBody>
+              <Button
               type="submit"
-            >
-              Submit
-            </Button>
+              className="w-full text-white font-semibold text-base"
+              color="success"
+              >
+                Submit
+              </Button>
+            </CardBody>
           </Form>
-        </CardBody>
         <Divider />
         <CardFooter>
           <p>
