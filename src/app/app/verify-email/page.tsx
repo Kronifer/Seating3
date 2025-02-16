@@ -27,7 +27,7 @@ export default function VerifyPage() {
       <br />
       <Card className="w-3/4 items-center inline-block">
         <Form className="items-center" validationBehavior="native">
-        <CardBody className="items-center">
+          <CardBody className="items-center">
             <InputOtp
               isRequired
               id="code"
@@ -37,18 +37,18 @@ export default function VerifyPage() {
               textAlign="center"
               variant="underlined"
             />
-            </CardBody>
-            <Divider />
-            <CardBody>
-              <Button
-              type="submit"
+          </CardBody>
+          <Divider />
+          <CardBody>
+            <Button
               className="w-full text-white font-semibold text-base"
               color="success"
-              >
-                Submit
-              </Button>
-            </CardBody>
-          </Form>
+              type="submit"
+            >
+              Submit
+            </Button>
+          </CardBody>
+        </Form>
         <Divider />
         <CardFooter>
           <p>

@@ -1,13 +1,12 @@
 "use client";
-import { createHash } from "crypto";
-
 import { Form } from "@heroui/form";
 import { Card, CardBody, CardFooter } from "@heroui/card";
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { FormEvent, useState } from "react";
 import { Divider } from "@heroui/divider";
-import { useRouter } from "next/navigation";
+
+import { register } from "@/utils/api";
 
 export default function RegisterPage() {
   const [formStep, setFormStep] = useState(0);
@@ -18,66 +17,48 @@ export default function RegisterPage() {
   const [pwd, setPwd] = useState("");
   const [usernameInvalid, setUsernameInvalid] = useState(false);
   const [emailInvalid, setEmailInvalid] = useState(false);
-  const router = useRouter();
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const hash = createHash("sha512");
+    const resp = register(firstName + " " + lastName, userName, pwd, email);
 
-    hash.update(pwd);
-    await fetch("/api/users/create", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: email,
-        username: userName,
-        pwd: hash.digest("hex"),
-        name: firstName + " " + lastName,
-      }),
-    })
-      .then((resp) =>
-        resp.json().then((data) => ({ status: resp.status, json: data })),
-      )
-      .then((r) => {
-        if (r.status === 409 && r.json.msg.includes("username")) {
-          setUsernameInvalid((usernameInvalid) => true);
-          const a = setInterval(() => {
-            (
-              document.getElementById("username")! as HTMLInputElement
-            ).reportValidity();
-            if (
-              (
-                document.getElementById("username")! as HTMLInputElement
-              ).getAttribute("aria-invalid") == "true"
-            ) {
-              setUsernameInvalid((usernameInvalid) => false);
-              clearInterval(a);
-            }
-          }, 50);
-        }
-        if (r.status === 409 && r.json.msg.includes("email")) {
-          setEmailInvalid((emailInvalid) => true);
-          const a = setInterval(() => {
+    if (resp.invalid) {
+      if (resp.incorrectFields.includes("email")) {
+        setEmailInvalid(true);
+        const a = setInterval(() => {
+          (
+            document.getElementById("email")! as HTMLInputElement
+          ).reportValidity();
+          if (
             (
               document.getElementById("email")! as HTMLInputElement
-            ).reportValidity();
-            if (
-              (
-                document.getElementById("email")! as HTMLInputElement
-              ).getAttribute("aria-invalid") == "true"
-            ) {
-              setEmailInvalid((emailInvalid) => false);
-              clearInterval(a);
-            }
-          }, 50);
-        }
-        if (r.status === 202) {
-          window.sessionStorage.setItem("email", email);
-          location.href = "/verify-email";
-        }
-      });
+            ).getAttribute("aria-invalid") == "true"
+          ) {
+            setEmailInvalid(false);
+            clearInterval(a);
+          }
+        }, 50);
+      }
+      if (resp.incorrectFields.includes("username")) {
+        setUsernameInvalid(true);
+        const a = setInterval(() => {
+          (
+            document.getElementById("username")! as HTMLInputElement
+          ).reportValidity();
+          if (
+            (
+              document.getElementById("username")! as HTMLInputElement
+            ).getAttribute("aria-invalid") == "true"
+          ) {
+            setUsernameInvalid(false);
+            clearInterval(a);
+          }
+        }, 50);
+      }
+    } else {
+      window.sessionStorage.setItem("email", email);
+      location.href = "/verify-email";
+    }
   };
 
   return (
