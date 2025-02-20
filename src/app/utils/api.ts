@@ -39,3 +39,98 @@ export function register(
 
   return ret;
 }
+
+export function verifyEmail(email: string, code: string) {
+  var ret = { invalid: false, reason: <string | null>null };
+
+  fetch("/api/users/verifyemail", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email: email,
+      code: code,
+    }),
+  })
+    .then((resp) =>
+      resp.json().then((data) => ({ status: resp.status, json: data })),
+    )
+    .then((r) => {
+      if (r.status === 401) {
+        ret.invalid = true;
+        ret.reason = "Code is invalid or expired.";
+      }
+    });
+
+  return ret;
+}
+
+export function login(username: string, pwd: string) {
+  const hash = createHash("sha512");
+
+  hash.update(pwd);
+  fetch("/api/users/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      username: username,
+      pwd: hash.digest("hex"),
+    }),
+  })
+    .then((resp) =>
+      resp.json().then((data) => ({ status: resp.status, json: data })),
+    )
+    .then((r) => {
+      var ret = {
+        invalid: false,
+        reason: <string | null>null,
+        token: <string | null>null,
+        expiry: <EpochTimeStamp | null>null,
+      };
+
+      if (r.status === 401) {
+        ret.invalid = true;
+        if (r.json.msg.includes("verified")) {
+          ret.reason = "Email has not been verified.";
+        } else {
+          ret.reason = "Username or password is invalid.";
+        }
+      } else {
+        ret.token = r.json.token;
+        ret.expiry = r.json.expires_at;
+      }
+
+      return ret;
+    });
+}
+
+export function tokenRefresh() {
+  const timestamp = parseInt(localStorage.getItem("expireAt")!);
+
+  if (
+    Number.isNaN(timestamp) ||
+    (<any>["", null]).contains(localStorage.getItem("token"))
+  ) {
+    return;
+  }
+
+  if (timestamp <= Date.now() / 1000 - 600) {
+    fetch("/api/users/renewtoken", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: localStorage.getItem("token")!,
+      },
+    }).then((resp) => {
+      if (resp.status == 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("expireAt");
+      } else {
+        localStorage.setItem("expireAt", (Date.now() / 1000 + 3600).toString());
+      }
+    });
+  }
+}

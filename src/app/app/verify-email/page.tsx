@@ -5,11 +5,38 @@ import { InputOtp } from "@heroui/input-otp";
 import { Form } from "@heroui/form";
 import { Button } from "@heroui/button";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
+
+import { verifyEmail } from "@/utils/api";
 
 export default function VerifyPage() {
   const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [codeInvalid, setCodeInvalid] = useState(false);
   const router = useRouter();
+
+  const submit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const resp = verifyEmail(email, code);
+
+    if (resp.invalid) {
+      const a = setInterval(() => {
+        setCodeInvalid(true);
+        (
+          document.querySelector(
+            "input[autocomplete='one-time-code']",
+          )! as HTMLInputElement
+        ).reportValidity();
+        if (
+          (document.getElementById("code")! as HTMLInputElement).getAttribute(
+            "data-invalid",
+          ) == "true"
+        ) {
+          clearInterval(a);
+        }
+      });
+    }
+  };
 
   useEffect(() => {
     setEmail(
@@ -26,7 +53,11 @@ export default function VerifyPage() {
       <br />
       <br />
       <Card className="w-3/4 items-center inline-block">
-        <Form className="items-center" validationBehavior="native">
+        <Form
+          className="items-center"
+          validationBehavior="native"
+          onSubmit={submit}
+        >
           <CardBody className="items-center">
             <InputOtp
               isRequired
@@ -35,6 +66,12 @@ export default function VerifyPage() {
               length={6}
               name="code"
               textAlign="center"
+              validate={(value) => {
+                if (codeInvalid) {
+                  return "Code is invalid or has expired.";
+                }
+              }}
+              value={code}
               variant="underlined"
             />
           </CardBody>
