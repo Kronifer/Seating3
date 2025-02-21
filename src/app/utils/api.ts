@@ -134,3 +134,75 @@ export function tokenRefresh() {
     });
   }
 }
+
+export function forgotUsername(email: string) {
+  fetch("/api/users/forgotusername", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email: email,
+    }),
+  }).then((resp) => {
+    if (resp.status === 200) {
+      return true;
+    }
+  });
+
+  return false;
+}
+
+export function sendPasswordResetCode(email: string) {
+  fetch("/api/users/resetpassword", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email: email,
+    }),
+  })
+    .then((resp) =>
+      resp.json().then((data) => ({ status: resp.status, json: data })),
+    )
+    .then((r) => {
+      if (r.status === 200) {
+        return true;
+      }
+    });
+
+  return false;
+}
+
+export function passwordReset(email: string, code: string, pwd: string) {
+  const hash = createHash("sha512");
+
+  hash.update(pwd);
+  fetch("/api/users/resetpassword", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email: email,
+      code: code,
+      pwd: hash.digest("hex"),
+    }),
+  })
+    .then((resp) =>
+      resp.json().then((data) => ({ status: resp.status, json: data })),
+    )
+    .then((r) => {
+      if (r.status === 200) {
+        return true;
+      }
+    });
+
+  return false;
+}
+
+export function validateCode(code: string, scope: string) {
+  // so we can have a decent looking multi-step password change
+  return; // TODO
+}
