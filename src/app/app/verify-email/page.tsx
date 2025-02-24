@@ -17,32 +17,37 @@ export default function VerifyPage() {
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const resp = verifyEmail(email, code);
-
-    if (resp.invalid) {
-      const a = setInterval(() => {
-        setCodeInvalid(true);
-        (
-          document.querySelector(
-            "input[autocomplete='one-time-code']",
-          )! as HTMLInputElement
-        ).reportValidity();
-        if (
-          (document.getElementById("code")! as HTMLInputElement).getAttribute(
-            "data-invalid",
-          ) == "true"
-        ) {
-          clearInterval(a);
-        }
-      });
-    }
+    console.log(code);
+    verifyEmail(email, code).then((resp) => {
+      if (resp.invalid) {
+        const a = setInterval(() => {
+          setCodeInvalid(true);
+          (
+            document.querySelector(
+              "input[autocomplete='one-time-code']",
+            )! as HTMLInputElement
+          ).reportValidity();
+          if (
+            (document.getElementById("code")! as HTMLInputElement).getAttribute(
+              "data-invalid",
+            ) == "true"
+          ) {
+            setCodeInvalid(false);
+            clearInterval(a);
+          }
+        });
+      }
+      else {
+        // TODO: the actual important shit
+      }
+    });
   };
 
   useEffect(() => {
     setEmail(
       sessionStorage.getItem("email") ? sessionStorage.getItem("email")! : "",
     );
-    if (document.referrer != location.origin + "/register" || email === "") {
+    if (document.referrer != location.origin + "/register") {
       router.push("/");
     }
   });
@@ -73,10 +78,11 @@ export default function VerifyPage() {
               }}
               value={code}
               variant="underlined"
+              onValueChange={setCode}
             />
           </CardBody>
           <Divider />
-          <CardBody>
+          <CardBody className="items-center">
             <Button
               className="w-full text-white font-semibold text-base"
               color="success"

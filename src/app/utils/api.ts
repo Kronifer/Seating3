@@ -1,3 +1,4 @@
+"use client";
 import { createHash } from "crypto";
 
 export function register(
@@ -7,10 +8,9 @@ export function register(
   email: string,
 ) {
   const hash = createHash("sha512");
-  var ret = { invalid: false, incorrectFields: <string[]>[] };
 
   hash.update(pwd);
-  fetch("/api/users/create", {
+  return fetch("/api/users/create", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -26,8 +26,12 @@ export function register(
       resp.json().then((data) => ({ status: resp.status, json: data })),
     )
     .then((r) => {
+      var ret = { invalid: false, incorrectFields: <string[]>[] };
+
       if (r.status === 409) {
         ret.invalid = true;
+      } else {
+        console.log(r.status);
       }
       if (ret.invalid === true && r.json.msg.includes("username")) {
         ret.incorrectFields.push("username");
@@ -35,15 +39,13 @@ export function register(
       if (ret.invalid === true && r.json.msg.includes("email")) {
         ret.incorrectFields.push("username");
       }
-    });
 
-  return ret;
+      return ret;
+    });
 }
 
 export function verifyEmail(email: string, code: string) {
-  var ret = { invalid: false, reason: <string | null>null };
-
-  fetch("/api/users/verifyemail", {
+  return fetch("/api/users/verifyemail", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -57,20 +59,22 @@ export function verifyEmail(email: string, code: string) {
       resp.json().then((data) => ({ status: resp.status, json: data })),
     )
     .then((r) => {
+      var ret = { invalid: false, reason: <string | null>null };
+
       if (r.status === 401) {
         ret.invalid = true;
         ret.reason = "Code is invalid or expired.";
       }
-    });
 
-  return ret;
+      return ret;
+    });
 }
 
 export function login(username: string, pwd: string) {
   const hash = createHash("sha512");
 
   hash.update(pwd);
-  fetch("/api/users/login", {
+  return fetch("/api/users/login", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -136,7 +140,7 @@ export function tokenRefresh() {
 }
 
 export function forgotUsername(email: string) {
-  fetch("/api/users/forgotusername", {
+  return fetch("/api/users/forgotusername", {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -148,13 +152,14 @@ export function forgotUsername(email: string) {
     if (resp.status === 200) {
       return true;
     }
+    else {
+      return false;
+    }
   });
-
-  return false;
 }
 
 export function sendPasswordResetCode(email: string) {
-  fetch("/api/users/resetpassword", {
+  return fetch("/api/users/resetpassword", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -170,16 +175,18 @@ export function sendPasswordResetCode(email: string) {
       if (r.status === 200) {
         return true;
       }
+      else {
+        return false;
+      }
     });
 
-  return false;
 }
 
 export function passwordReset(email: string, code: string, pwd: string) {
   const hash = createHash("sha512");
 
   hash.update(pwd);
-  fetch("/api/users/resetpassword", {
+  return fetch("/api/users/resetpassword", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -197,9 +204,11 @@ export function passwordReset(email: string, code: string, pwd: string) {
       if (r.status === 200) {
         return true;
       }
+      else {
+        return false;
+      }
     });
 
-  return false;
 }
 
 export function validateCode(code: string, scope: string) {
