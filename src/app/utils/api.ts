@@ -10,6 +10,7 @@ export function register(
   const hash = createHash("sha512");
 
   hash.update(pwd);
+
   return fetch("/api/users/create", {
     method: "POST",
     headers: {
@@ -74,6 +75,7 @@ export function login(username: string, pwd: string) {
   const hash = createHash("sha512");
 
   hash.update(pwd);
+
   return fetch("/api/users/login", {
     method: "POST",
     headers: {
@@ -93,14 +95,16 @@ export function login(username: string, pwd: string) {
         reason: <string | null>null,
         token: <string | null>null,
         expiry: <EpochTimeStamp | null>null,
+        email: <string | null>null,
       };
 
       if (r.status === 401) {
         ret.invalid = true;
         if (r.json.msg.includes("verified")) {
-          ret.reason = "Email has not been verified.";
+          ret.reason = "verify";
+          ret.email = r.json.email;
         } else {
-          ret.reason = "Username or password is invalid.";
+          ret.reason = "invalid";
         }
       } else {
         ret.token = r.json.token;
@@ -151,8 +155,7 @@ export function forgotUsername(email: string) {
   }).then((resp) => {
     if (resp.status === 200) {
       return true;
-    }
-    else {
+    } else {
       return false;
     }
   });
@@ -174,18 +177,17 @@ export function sendPasswordResetCode(email: string) {
     .then((r) => {
       if (r.status === 200) {
         return true;
-      }
-      else {
+      } else {
         return false;
       }
     });
-
 }
 
 export function passwordReset(email: string, code: string, pwd: string) {
   const hash = createHash("sha512");
 
   hash.update(pwd);
+
   return fetch("/api/users/resetpassword", {
     method: "POST",
     headers: {
@@ -203,12 +205,10 @@ export function passwordReset(email: string, code: string, pwd: string) {
     .then((r) => {
       if (r.status === 200) {
         return true;
-      }
-      else {
+      } else {
         return false;
       }
     });
-
 }
 
 export function validateCode(code: string, scope: string) {

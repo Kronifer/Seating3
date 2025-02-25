@@ -6,6 +6,7 @@ import { Form } from "@heroui/form";
 import { Button } from "@heroui/button";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
+import { addToast } from "@heroui/toast";
 
 import { verifyEmail } from "@/utils/api";
 
@@ -36,9 +37,15 @@ export default function VerifyPage() {
             clearInterval(a);
           }
         });
-      }
-      else {
-        // TODO: the actual important shit
+      } else {
+        addToast({
+          color: "success",
+          title: "Verification Successful!",
+          timeout: 1000,
+        });
+        setTimeout(() => {
+          router.push("/login");
+        }, 1000);
       }
     });
   };
@@ -47,7 +54,10 @@ export default function VerifyPage() {
     setEmail(
       sessionStorage.getItem("email") ? sessionStorage.getItem("email")! : "",
     );
-    if (document.referrer != location.origin + "/register") {
+    if (
+      document.referrer != location.origin + "/register" &&
+      document.referrer != location.origin + "/login"
+    ) {
       router.push("/");
     }
   });
@@ -82,7 +92,7 @@ export default function VerifyPage() {
             />
           </CardBody>
           <Divider />
-          <CardBody className="items-center">
+          <CardBody className="items-center pt-2">
             <Button
               className="w-full text-white font-semibold text-base"
               color="success"

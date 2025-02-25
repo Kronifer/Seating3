@@ -39,7 +39,7 @@ def login_user(db):
         if db["verify"].find_one({"email": user["email"]}) is None:
             generate_challenge(user["email"], "email")
         return (
-            {"status": "error", "msg": "email has not been verified"},
+            {"status": "error", "msg": "email has not been verified", "email": user["email"]},
             401,
             {"Content-Type": "application/json"},
         )

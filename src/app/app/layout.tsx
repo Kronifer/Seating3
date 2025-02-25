@@ -6,6 +6,7 @@ import { Providers } from "./providers";
 
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
+import { tokenRefresh } from "@/utils/api";
 
 export const metadata: Metadata = {
   title: {
@@ -30,6 +31,8 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  setInterval(tokenRefresh, 60000);
+
   return (
     <html suppressHydrationWarning lang="en">
       <head />

@@ -4,13 +4,54 @@ import { Card, CardBody, CardFooter } from "@heroui/card";
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { Divider } from "@heroui/divider";
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { addToast } from "@heroui/toast";
+
+import { login } from "@/utils/api";
 
 export default function LoginPage() {
   const [userName, setUserName] = useState("");
   const [pwd, setPwd] = useState("");
   const router = useRouter();
+
+  const submit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    login(userName, pwd).then((resp) => {
+      if (resp.invalid) {
+        if (resp.reason === "verify") {
+          addToast({
+            color: "danger",
+            title: "Login failed!",
+            description: "Email has not been verified.",
+            timeout: 1000,
+          });
+          setTimeout(() => {
+            sessionStorage.setItem("email", resp.email!);
+            location.href = "/verify-email";
+          }, 2000);
+        } else {
+          addToast({
+            color: "danger",
+            title: "Login failed!",
+            description: "Username or password is invalid.",
+            timeout: 2000,
+          });
+        }
+      } else {
+        localStorage.setItem("token", resp.token!);
+        localStorage.setItem("expireAt", resp.expiry!.toString());
+        addToast({
+          color: "success",
+          title: "Login successful!",
+          timeout: 1000,
+        });
+        setTimeout(() => {
+          router.push("/");
+        }, 1000);
+      }
+    });
+  };
 
   return (
     <>
@@ -22,7 +63,7 @@ export default function LoginPage() {
       <br />
       <Card className="w-1/3 inline-block">
         <CardBody>
-          <Form className="gap-4" validationBehavior="native">
+          <Form className="gap-4" validationBehavior="native" onSubmit={submit}>
             <Input
               isRequired
               label="Username"
