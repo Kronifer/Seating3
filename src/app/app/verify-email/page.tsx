@@ -29,7 +29,7 @@ export default function VerifyPage() {
             )! as HTMLInputElement
           ).reportValidity();
           if (
-            (document.getElementById("code")! as HTMLInputElement).getAttribute(
+            (document.getElementById("code")! as HTMLDivElement).getAttribute(
               "data-invalid",
             ) == "true"
           ) {

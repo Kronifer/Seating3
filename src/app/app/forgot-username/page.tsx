@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { Button } from "@heroui/button";
 import { Card, CardBody, CardFooter } from "@heroui/card";
@@ -49,26 +49,26 @@ export default function UsernamePage() {
       <br />
       <Card className="w-1/3 items-center inline-block">
         <Form
-          className="items-center"
+          className="items-center gap-3"
           validationBehavior="native"
           onSubmit={submit}
         >
-          <CardBody className="items-center">
+          <CardBody className="items-center pb-0">
             <Input
               isRequired
               id="email"
               label="Email"
-              placeholder=" "
+              labelPlacement="outside"
               name="email"
+              placeholder=" "
               value={email}
-              variant="underlined"
               onChange={(e) => {
                 setEmail(e.target.value);
               }}
             />
           </CardBody>
           <Divider />
-          <CardFooter className="items-center pt-2">
+          <CardFooter className="items-center pt-1">
             <Button
               className="w-full text-white font-semibold text-base"
               color="success"

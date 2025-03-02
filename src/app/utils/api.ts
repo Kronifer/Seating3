@@ -145,7 +145,7 @@ export function tokenRefresh() {
 
 export function forgotUsername(email: string) {
   return fetch("/api/users/forgotusername", {
-    method: "GET",
+    method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
@@ -211,7 +211,22 @@ export function passwordReset(email: string, code: string, pwd: string) {
     });
 }
 
-export function validateCode(code: string, scope: string) {
-  // so we can have a decent looking multi-step password change
-  return; // TODO
+export function validateCode(email: string, code: string, scope: string) {
+  return fetch("/api/users/validatecode", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email: email,
+      code: code,
+      scope: scope,
+    }),
+  }).then((resp) => {
+    if (resp.status === 200) {
+      return true;
+    } else {
+      return false;
+    }
+  });
 }

@@ -211,7 +211,7 @@ def resetpass(db):
             return {"status": "success", "msg": "updated password"}, 200, {"Content-Type": "application/json"}
 
 
-@users.route("/forgotusername", methods=["GET"])
+@users.route("/forgotusername", methods=["POST"])
 @decorators.access_database("users")
 def forgotusername(db):
     body = request.get_json()
@@ -245,7 +245,7 @@ def forgotusername(db):
         )
 
 
-@users.route("/validatecode")
+@users.route("/validatecode", methods=["POST"])
 @decorators.access_database("verify")
 def validate_code(db):
     body = request.get_json()
