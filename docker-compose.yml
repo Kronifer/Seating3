@@ -1,5 +1,9 @@
 version: '3.1'
 services:
+  seatingsite:
+    image: seatingsite:latest
+    ports:
+      - "80:80"
   seatingmail:
     container_name: seatingmail
     image: seatingmail:latest
@@ -8,9 +12,8 @@ services:
       - "587:587"
       - "465:465"
   seatingapi:
+    container_name: seatingapi
     image: seatingapi:latest
-    ports:
-      - "80:80"
     environment:
       MONGO_USR: "seatingReadWrite"
       MONGO_PASS: "BLxh%2523mspdUWv"

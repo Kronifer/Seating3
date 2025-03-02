@@ -1,8 +1,8 @@
 from flask import Flask
 
-from .routes.users import users
 from .routes.events import events
 from .routes.seats import seats
+from .routes.users import users
 
 app = Flask(__name__)
 

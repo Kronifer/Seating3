@@ -1,0 +1,8 @@
+FROM node:alpine
+WORKDIR /site
+COPY ./src/app/package-lock.json /site
+COPY ./src/app/package.json /site
+RUN npm install
+COPY ./src/app /site
+RUN npm run build
+ENTRYPOINT ["npm", "run", "start"]

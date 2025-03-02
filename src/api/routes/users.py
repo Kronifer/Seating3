@@ -39,7 +39,7 @@ def login_user(db):
         if db["verify"].find_one({"email": user["email"]}) is None:
             generate_challenge(user["email"], "email")
         return (
-            {"status": "error", "msg": "email has not been verified"},
+            {"status": "error", "msg": "email has not been verified", "email": user["email"]},
             401,
             {"Content-Type": "application/json"},
         )
@@ -89,10 +89,13 @@ def create_user(db):
             400,
             {"Content-Type": "application/json"},
         )
+    invalid = []
     if db["users"].find_one({"username": uname}) is not None:
-        return {"status": "error", "msg": "username already exists"}, 409, {"Content-Type": "application/json"}
+        invalid.append("username")
     if db["users"].find_one({"email": email}) is not None:
-        return {"status": "error", "msg": "email already exists"}, 409, {"Content-Type": "application/json"}
+        invalid.append("email")
+    if len(invalid) != 0:
+        return {"status": "error", "msg": f"invalid field(s): {", ".join(invalid)}"}, 409
     salt = secrets.token_bytes(8)
     hash = hashlib.sha3_512(bytes.fromhex(pwd) + salt).digest().hex()
     db["users"].insert_one(
@@ -186,7 +189,14 @@ def resetpass(db):
     else:
         code = db["verify"].find_one({"code": code, "email": email})
         if code is None or code["scope"] != "passwordReset":
-            return {"status": "error", "msg": "code is invalid or expired"}, 401, {"Content-Type": "application/json"}
+            return (
+                {
+                    "status": "error",
+                    "msg": "code is invalid or expired. To generate a new code, send another request with no code field.",
+                },
+                401,
+                {"Content-Type": "application/json"},
+            )
         pwd = body.get("pwd", None)
         if pwd is None:
             return {"status": "error", "msg": "missing required field: pwd"}, 401, {"Content-Type": "application/json"}
@@ -201,7 +211,7 @@ def resetpass(db):
             return {"status": "success", "msg": "updated password"}, 200, {"Content-Type": "application/json"}
 
 
-@users.route("/forgotusername", methods=["GET"])
+@users.route("/forgotusername", methods=["POST"])
 @decorators.access_database("users")
 def forgotusername(db):
     body = request.get_json()
@@ -233,3 +243,25 @@ def forgotusername(db):
             200,
             {"Content-Type": "application/json"},
         )
+
+
+@users.route("/validatecode", methods=["POST"])
+@decorators.access_database("verify")
+def validate_code(db):
+    body = request.get_json()
+    email = body.get("email", None)
+    code = body.get("code", None)
+    scope = body.get("scope", None)
+    if not all([email, code]):
+        err = []
+        if email is None:
+            err.append("email")
+        if code is None:
+            err.append("code")
+        if scope is None:
+            err.append("scope")
+        return {"status": "error", "msg": f"missing required field(s): {", ".join(err)}"}, 400
+    if db["verify"].find_one({"email": email, "code": code, "scope": scope}) is None:
+        return {"status": "error", "msg": "Code was not found or is invalid for the provided scope."}, 404
+    else:
+        return {"status": "success", "msg": "Code is valid"}, 200
