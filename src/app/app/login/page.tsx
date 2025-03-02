@@ -4,7 +4,7 @@ import { Card, CardBody, CardFooter } from "@heroui/card";
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { Divider } from "@heroui/divider";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { addToast } from "@heroui/toast";
 
@@ -14,6 +14,11 @@ export default function LoginPage() {
   const [userName, setUserName] = useState("");
   const [pwd, setPwd] = useState("");
   const router = useRouter();
+  useEffect(() => {
+    if(typeof localStorage.getItem("token") !== null) {
+      router.push("/");
+    }
+  })
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
