@@ -21,6 +21,16 @@ export const StrictNoAuth: FC<{ children: React.ReactNode }> = ({
   const router = useRouter();
 
   useEffect(() => {
+    let strtime = localStorage.getItem("expireAt");
+    if(strtime == null) {
+      return;
+    }
+    let time = parseInt(strtime);
+    if (time < Date.now() / 1000) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("expireAt");
+      return;
+    }
     if (localStorage.getItem("token") !== null) {
       router.push("/");
     }
