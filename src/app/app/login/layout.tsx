@@ -1,5 +1,7 @@
 import { Metadata } from "next";
 
+import { StrictNoAuth } from "@/utils/components";
+
 export const metadata: Metadata = {
   title: "Login",
 };
@@ -11,7 +13,9 @@ export default function LoginLayout({
 }) {
   return (
     <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
-      <div className="w-full text-center justify-center">{children}</div>
+      <div className="w-full text-center justify-center">
+        <StrictNoAuth>{children}</StrictNoAuth>
+      </div>
     </section>
   );
 }

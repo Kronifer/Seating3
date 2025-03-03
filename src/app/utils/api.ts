@@ -117,15 +117,13 @@ export function login(username: string, pwd: string) {
 
 export function tokenRefresh() {
   const timestamp = parseInt(localStorage.getItem("expireAt")!);
+  let token = localStorage.getItem("token");
 
-  if (
-    Number.isNaN(timestamp) ||
-    (<any>["", null]).contains(localStorage.getItem("token"))
-  ) {
+  if (Number.isNaN(timestamp) || token === null || token!.trim() === "") {
     return;
   }
 
-  if (timestamp <= Date.now() / 1000 - 600) {
+  if ((timestamp - 600) <= (Date.now() / 1000)) {
     fetch("/api/users/renewtoken", {
       method: "POST",
       headers: {
