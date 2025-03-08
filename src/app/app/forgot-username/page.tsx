@@ -36,7 +36,7 @@ export default function UsernamePage() {
           timeout: 1000,
         });
         setTimeout(() => {
-          router.push("/");
+          location.href = "/";
         }, 1000);
       }
     });

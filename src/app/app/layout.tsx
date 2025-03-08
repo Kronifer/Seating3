@@ -1,12 +1,14 @@
 import "@/styles/globals.css";
 import { Metadata, Viewport } from "next";
 import clsx from "clsx";
+import { headers } from "next/headers";
 
 import { Providers } from "./providers";
 
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 import { RefreshToken } from "@/utils/components";
+import { Navbar } from "@/components/navbar";
 
 export const metadata: Metadata = {
   title: {
@@ -26,11 +28,15 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  var path = await headers().then((h) => {
+    return h.get("x-path");
+  });
+
   return (
     <html suppressHydrationWarning lang="en">
       <head />
@@ -42,6 +48,7 @@ export default function RootLayout({
       >
         <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
           <div className="relative flex flex-col h-screen">
+            {path == "/" && <Navbar activeIndex={0} />}
             <main className="container mx-auto max-w-7xl pt-16 px-6 flex-grow">
               <RefreshToken>{children}</RefreshToken>
             </main>

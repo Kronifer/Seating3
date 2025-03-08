@@ -60,7 +60,7 @@ export default function PasswordPage() {
           timeout: 1000,
         });
         setTimeout(() => {
-          router.push("/");
+          location.href = "/";
         }, 1000);
       } else {
         addToast({

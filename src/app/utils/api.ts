@@ -123,7 +123,7 @@ export function tokenRefresh() {
     return;
   }
 
-  if ((timestamp - 600) <= (Date.now() / 1000)) {
+  if (timestamp - 600 <= Date.now() / 1000) {
     fetch("/api/users/renewtoken", {
       method: "POST",
       headers: {
@@ -226,5 +226,27 @@ export function validateCode(email: string, code: string, scope: string) {
     } else {
       return false;
     }
+  });
+}
+
+export function getUser() {
+  if (
+    localStorage.getItem("token") == null ||
+    parseInt(localStorage.getItem("expireBy")!) < Date.now() / 1000
+  ) {
+    tokenRefresh();
+
+    return;
+  }
+
+  return fetch("/api/users/getuser", {
+    method: "GET",
+    headers: {
+      Authorization: localStorage.getItem("token")!,
+    },
+  }).then((resp) => {
+    return resp.json().then((data) => {
+      return data;
+    });
   });
 }

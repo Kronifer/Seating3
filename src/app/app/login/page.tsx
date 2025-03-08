@@ -47,7 +47,7 @@ export default function LoginPage() {
           timeout: 1000,
         });
         setTimeout(() => {
-          router.push("/");
+          location.href = "/";
         }, 1000);
       }
     });

@@ -58,7 +58,7 @@ export default function VerifyPage() {
       document.referrer != location.origin + "/register" &&
       document.referrer != location.origin + "/login"
     ) {
-      router.push("/");
+      location.href = "/";
     }
   });
 
