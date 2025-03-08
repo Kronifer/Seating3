@@ -10,6 +10,12 @@ import {
 } from "@heroui/navbar";
 import { Skeleton } from "@heroui/skeleton";
 import { useEffect, useState } from "react";
+import {
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+} from "@heroui/dropdown";
 
 import { getUser } from "@/utils/api";
 
@@ -28,12 +34,17 @@ export const Navbar = ({ activeIndex }: NavbarProps) => {
     if (token !== null) {
       setLoggedIn(true);
     }
-    getUser()?.then((json) => {
-      if (json === undefined) {
-        setLoggedIn(false);
-      } else {
-        setName(json.name);
-      }
+    var p = getUser();
+
+    if (p === undefined) {
+      setLoading(false);
+      setLoggedIn(false);
+
+      return;
+    }
+    p.then((json) => {
+      setName(json.name);
+      setLoggedIn(true);
       setLoading(false);
     });
   });
@@ -79,8 +90,25 @@ export const Navbar = ({ activeIndex }: NavbarProps) => {
               <Avatar />
             </Skeleton>
           )}
-          {loggedIn && !loading && <Avatar name={name} />}
-          {!loggedIn && !loading && (
+          {!loading && loggedIn && (
+            <Dropdown>
+              <DropdownTrigger>
+                <Avatar className="cursor-pointer" name={name} />
+              </DropdownTrigger>
+              <DropdownMenu aria-label="Static Actions">
+                <DropdownItem key="events">Events</DropdownItem>
+                <DropdownItem key="settings">Settings</DropdownItem>
+                <DropdownItem
+                  key="logout"
+                  className="text-danger"
+                  color="danger"
+                >
+                  Log Out
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
+          )}
+          {!loading && !loggedIn && (
             <>
               <Button
                 color="default"

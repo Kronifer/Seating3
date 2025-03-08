@@ -18,7 +18,6 @@ export default function VerifyPage() {
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log(code);
     verifyEmail(email, code).then((resp) => {
       if (resp.invalid) {
         const a = setInterval(() => {

@@ -31,8 +31,6 @@ export function register(
 
       if (r.status === 409) {
         ret.invalid = true;
-      } else {
-        console.log(r.status);
       }
       if (ret.invalid === true && r.json.msg.includes("username")) {
         ret.incorrectFields.push("username");
