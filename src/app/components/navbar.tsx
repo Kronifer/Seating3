@@ -34,8 +34,8 @@ export const Navbar = ({ activeIndex }: NavbarProps) => {
       } else {
         setName(json.name);
       }
+      setLoading(false);
     });
-    setLoading(false);
   });
 
   return (
