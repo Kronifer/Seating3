@@ -35,7 +35,7 @@ export const StrictNoAuth: FC<{ children: React.ReactNode }> = ({
       return;
     }
     if (localStorage.getItem("token") !== null) {
-      router.push("/");
+      location.href = "/";
     }
   });
 
@@ -50,7 +50,7 @@ export const UseAuth: FC<{ children: React.ReactNode }> = ({ children }) => {
       let strTime: string | null = localStorage.getItem("expireAt");
 
       if (strTime === null) {
-        router.push("/");
+        location.href = "/";
       }
       let time = parseInt(strTime!);
 
