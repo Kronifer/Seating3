@@ -5,8 +5,8 @@ export default function Home() {
     <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
       <div className="inline-block max-w-xl text-center justify-center">
         <span className={title({ color: "blue" })}>Seating3&nbsp;</span>
-        <span className={title()}>is coming soon.</span>
-        <div className={subtitle({ class: "mt-4" })}>Stay tuned for more!</div>
+        <span className={title()}>: Event planning made simple.</span>
+        <div className={subtitle({ class: "mt-4" })}>Coming soon!</div>
       </div>
     </section>
   );

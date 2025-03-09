@@ -355,7 +355,7 @@ def export_event(user, db):
     users = db["users"]
     user_objs = users.find({"username": {"$in": list(event["registered"].keys())}})
 
-    user_lut = {u["username"]: u["name"] for u in user_objs}
+    user_lut = {u["username"]: f"{u["name"]["first"]} {u["name"]["last"]}" for u in user_objs}
 
     csvstr = "name,table_id,party_size,"
     for i in event["meals"].keys():
@@ -398,8 +398,8 @@ def invite(user, db):
     if event["owner"] != user["username"]:
         return {"status": "error", "msg": "You are not the owner of this event"}, 400
     for email in invite_emails:
-        msg1 = f"You've been invited by {user["name"]} to join the event {event["name"]}. Join from the user dashboard using the the event ID: {event_id}."
-        msg2 = f"You've been invited by {user["name"]} to join the event {event["name"]} on Seating3. Join the event by registering and joining from the user dashboard using the the event ID: {event_id}."
+        msg1 = f"You've been invited by {user["name"]["first"] + " " + user["name"]["last"]} to join the event {event["name"]}. Join from the user dashboard using the the event ID: {event_id}."
+        msg2 = f"You've been invited by {user["name"]["first"] + " " + user["name"]["last"]} to join the event {event["name"]} on Seating3. Join the event by registering and joining from the user dashboard using the the event ID: {event_id}."
         if db["users"].find_one({"email": email}) is None:
             emails.send_email("noreply@seating3.dev", email, "You've been invited to an event on Seating3!", msg2)
         else:

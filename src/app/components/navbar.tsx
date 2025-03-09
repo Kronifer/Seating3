@@ -43,7 +43,7 @@ export const Navbar = ({ activeIndex }: NavbarProps) => {
       return;
     }
     p.then((json) => {
-      setName(json.name);
+      setName(json.name.first);
       setLoggedIn(true);
       setLoading(false);
     });

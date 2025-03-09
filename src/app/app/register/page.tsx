@@ -20,46 +20,48 @@ export default function RegisterPage() {
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    register(firstName + " " + lastName, userName, pwd, email).then((resp) => {
-      if (resp.invalid) {
-        if (resp.incorrectFields.includes("email")) {
-          setEmailInvalid(true);
-          const a = setInterval(() => {
-            (
-              document.getElementById("email")! as HTMLInputElement
-            ).reportValidity();
-            if (
+    register({ first: firstName, last: lastName }, userName, pwd, email).then(
+      (resp) => {
+        if (resp.invalid) {
+          if (resp.incorrectFields.includes("email")) {
+            setEmailInvalid(true);
+            const a = setInterval(() => {
               (
                 document.getElementById("email")! as HTMLInputElement
-              ).getAttribute("aria-invalid") == "true"
-            ) {
-              setEmailInvalid(false);
-              clearInterval(a);
-            }
-          }, 50);
-        }
-        if (resp.incorrectFields.includes("username")) {
-          setUsernameInvalid(true);
-          const a = setInterval(() => {
-            (
-              document.getElementById("username")! as HTMLInputElement
-            ).reportValidity();
-            if (
+              ).reportValidity();
+              if (
+                (
+                  document.getElementById("email")! as HTMLInputElement
+                ).getAttribute("aria-invalid") == "true"
+              ) {
+                setEmailInvalid(false);
+                clearInterval(a);
+              }
+            }, 50);
+          }
+          if (resp.incorrectFields.includes("username")) {
+            setUsernameInvalid(true);
+            const a = setInterval(() => {
               (
                 document.getElementById("username")! as HTMLInputElement
-              ).getAttribute("aria-invalid") == "true"
-            ) {
-              setUsernameInvalid(false);
-              clearInterval(a);
-            }
-          }, 50);
+              ).reportValidity();
+              if (
+                (
+                  document.getElementById("username")! as HTMLInputElement
+                ).getAttribute("aria-invalid") == "true"
+              ) {
+                setUsernameInvalid(false);
+                clearInterval(a);
+              }
+            }, 50);
+          }
+        } else {
+          console.log(resp);
+          window.sessionStorage.setItem("email", email);
+          location.href = "/verify-email";
         }
-      } else {
-        console.log(resp);
-        window.sessionStorage.setItem("email", email);
-        location.href = "/verify-email";
-      }
-    });
+      },
+    );
   };
 
   return (

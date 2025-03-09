@@ -1,8 +1,13 @@
 "use client";
 import { createHash } from "crypto";
 
+export interface Name {
+  first: string;
+  last: string;
+}
+
 export function register(
-  name: string,
+  name: Name,
   username: string,
   pwd: string,
   email: string,

@@ -89,6 +89,8 @@ def create_user(db):
             400,
             {"Content-Type": "application/json"},
         )
+    if type(name) != dict:
+        return {"status": "error", "msg": f"'name' must be an object containing fields 'first' and 'last'."}, 400
     invalid = []
     if db["users"].find_one({"username": uname}) is not None:
         invalid.append("username")

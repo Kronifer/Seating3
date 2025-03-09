@@ -74,8 +74,9 @@ db.createCollection("users", {
               description: '\'verified\' must be present and must be a boolean stating whether or not the user has verified their email.'
             },
             name: {
-              bsonType: 'string',
-              description: '\'name\' must be present and must be a string containing the users real name.'
+              bsonType: 'object',
+              required: ['first', 'last'],
+              description: '\'name\' must be present and must contain the first and last name of the user.'
             },
             hash: {
               bsonType: 'object',
