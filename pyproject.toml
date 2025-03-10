@@ -5,6 +5,7 @@ description = "table"
 authors = ["Kronifer <44979306+Kronifer@users.noreply.github.com>"]
 license = "Proprietary"
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.13"

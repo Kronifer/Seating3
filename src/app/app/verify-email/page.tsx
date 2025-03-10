@@ -42,6 +42,7 @@ export default function VerifyPage() {
           title: "Verification Successful!",
           timeout: 1000,
         });
+        sessionStorage.removeItem("email");
         setTimeout(() => {
           router.push("/login");
         }, 1000);
@@ -55,7 +56,8 @@ export default function VerifyPage() {
     );
     if (
       document.referrer != location.origin + "/register" &&
-      document.referrer != location.origin + "/login"
+      document.referrer != location.origin + "/login" &&
+      document.referrer != location.origin + "/user/settings"
     ) {
       location.href = "/";
     }

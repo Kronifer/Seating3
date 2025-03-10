@@ -6,6 +6,12 @@ export interface Name {
   last: string;
 }
 
+export interface User {
+  name?: Name,
+  username?: string,
+  email?: string
+}
+
 export function register(
   name: Name,
   username: string,
@@ -252,4 +258,31 @@ export function getUser() {
       return data;
     });
   });
+}
+
+export function updateUser(user: User) {
+  if (
+    localStorage.getItem("token") == null ||
+    parseInt(localStorage.getItem("expireBy")!) < Date.now() / 1000
+  ) {
+    tokenRefresh();
+
+    return;
+  }
+  return fetch("/api/users/updateuser", {
+    method: "POST",
+    headers: {
+      "Authorization": localStorage.getItem("token")!,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(user)
+  })
+  .then(resp => {
+    if(resp.status == 200) {
+      return true;
+    }
+    else {
+      return false;
+    }
+  })
 }

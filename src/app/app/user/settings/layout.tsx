@@ -13,7 +13,7 @@ export default function UserSettingLayout({
 }) {
   return (
     <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
-      <div className="inline-block max-w-lg text-center justify-center">
+      <div className="inline-block w-1/3 text-center justify-center">
         <UseAuth>{children}</UseAuth>
       </div>
     </section>
