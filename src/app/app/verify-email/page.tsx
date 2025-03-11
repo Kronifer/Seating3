@@ -5,10 +5,11 @@ import { InputOtp } from "@heroui/input-otp";
 import { Form } from "@heroui/form";
 import { Button } from "@heroui/button";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import { addToast } from "@heroui/toast";
 
 import { verifyEmail } from "@/utils/api";
+import { useEffectOnce } from "@/utils/components";
 
 export default function VerifyPage() {
   const [email, setEmail] = useState("");
@@ -50,7 +51,7 @@ export default function VerifyPage() {
     });
   };
 
-  useEffect(() => {
+  useEffectOnce(() => {
     setEmail(
       sessionStorage.getItem("email") ? sessionStorage.getItem("email")! : "",
     );

@@ -1,15 +1,16 @@
 "use client";
 import { Avatar } from "@heroui/avatar";
 import { Skeleton } from "@heroui/skeleton";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import { Form } from "@heroui/form";
 import { Input } from "@heroui/input";
-
-import { getUser, updateUser, User } from "@/utils/api";
 import { Card, CardBody, CardFooter } from "@heroui/card";
 import { Divider } from "@heroui/divider";
 import { Button } from "@heroui/button";
 import { addToast } from "@heroui/toast";
+
+import { getUser, updateUser, User } from "@/utils/api";
+import { useEffectOnce } from "@/utils/components";
 
 export default function UserSettingPage() {
   const [firstName, setFirstName] = useState("");
@@ -20,7 +21,7 @@ export default function UserSettingPage() {
   const [user, setUser] = useState({} as any);
   const [emailInvalid, setEmailInvalid] = useState(false);
 
-  useEffect(() => {
+  useEffectOnce(() => {
     getUser()?.then((data) => {
       setFirstName(data.name.first);
       setLastName(data.name.last);
@@ -32,139 +33,197 @@ export default function UserSettingPage() {
   });
 
   function validateUsername(value: string) {
-    if(value.length < 5) {
+    if (value.length < 5) {
       return "Username must be at least 5 characters long.";
     }
   }
 
   function validateFirstName(value: string) {
-    if(value.length < 1) {
-      return "First Name must be at least 1 character long."
+    if (value.length < 1) {
+      return "First Name must be at least 1 character long.";
     }
   }
 
   function validateLastName(value: string) {
-    if(value.length < 1) {
-      return "Last Name must be at least 1 character long."
+    if (value.length < 1) {
+      return "Last Name must be at least 1 character long.";
     }
   }
 
   function validateEmail(value: string) {
-    if(emailInvalid) {
+    if (emailInvalid) {
       return "Email already in use.";
     }
   }
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     var verifyEmail = false;
+
     e.preventDefault();
-    let u = {name: {first: "", last: ""}, email: "", username: ""} as User;
-    if(firstName == user.name.first && lastName == user.name.last) {
+    let u = { name: { first: "", last: "" }, email: "", username: "" } as User;
+
+    if (firstName == user.name.first && lastName == user.name.last) {
       delete u.name;
-    }
-    else {
+    } else {
       u.name!.first = firstName;
       u.name!.last = lastName;
     }
-    if(username == user.username) {
+    if (username == user.username) {
       delete u.username;
-    }
-    else {
+    } else {
       u.username = username;
     }
-    if(email == user.email) {
+    if (email == user.email) {
       delete u.email;
-    }
-    else {
+    } else {
       u.email = email;
       verifyEmail = true;
     }
-    let p = updateUser(user);
-    if(p == undefined) {
+    let p = updateUser(u);
+
+    if (p == undefined) {
       addToast({
         color: "danger",
         title: "Session expired.",
-        timeout: 1000
-      })
+        timeout: 1000,
+      });
       setTimeout(() => {
         location.href = "/login";
-      }, 1000)
+      }, 1000);
+
       return;
     }
-    p.then(success => {
-      if(!success) {
+    p.then((success) => {
+      if (!success) {
         const a = setInterval(() => {
           setEmailInvalid(true);
-          (document.getElementById("email")! as HTMLInputElement).reportValidity();
-          if((document.getElementById("email")! as HTMLInputElement).getAttribute("aria-invalid") == "true") {
+          (
+            document.getElementById("email")! as HTMLInputElement
+          ).reportValidity();
+          if (
+            (
+              document.getElementById("email")! as HTMLInputElement
+            ).getAttribute("aria-invalid") == "true"
+          ) {
             setEmailInvalid(false);
             clearInterval(a);
           }
-        })
-      }
-      else {
+        });
+      } else {
         addToast({
           color: "success",
           title: "Successfully updated!",
           timeout: 1000,
-        })
-        if(verifyEmail) {
+        });
+        if (verifyEmail) {
           sessionStorage.setItem("email", email);
+          localStorage.removeItem("token");
+          localStorage.removeItem("expireAt");
           setTimeout(() => {
-            location.href = "/verify-email"
-          }, 1000)
-        }
-        else {
+            location.href = "/verify-email";
+          }, 1000);
+        } else {
           setTimeout(() => {
             location.reload();
-          }, 1000)
+          }, 1000);
         }
       }
-    })
+    });
   }
 
   return (
     <>
       <span className="text-4xl mb-4">User Settings</span>
       <div className="flex justify-center pt-2 pb-2">
-        {loading && (<Skeleton className="rounded-full"><Avatar size="lg"></Avatar></Skeleton>)}
-        {!loading && (<Avatar size="lg" name={firstName}></Avatar>)}
+        {loading && (
+          <Skeleton className="rounded-full">
+            <Avatar size="lg" />
+          </Skeleton>
+        )}
+        {!loading && <Avatar name={firstName} size="lg" />}
       </div>
       <Card className="w-full">
         <Form validationBehavior="native" onSubmit={submit}>
           <CardBody className="gap-3">
             {loading && (
-            <>
-            <Skeleton className="rounded-lg" isLoaded={!loading}>
-              <Input></Input>
-            </Skeleton>
-            <Skeleton className="rounded-lg" isLoaded={!loading}>
-            <Input></Input>
-            </Skeleton>
-            <Skeleton className="rounded-lg" isLoaded={!loading}>
-            <Input></Input>
-            </Skeleton>
-            <Skeleton className="rounded-lg" isLoaded={!loading}>
-            <Input></Input>
-            </Skeleton>
-            </>
+              <>
+                <Skeleton className="rounded-lg" isLoaded={!loading}>
+                  <Input />
+                </Skeleton>
+                <Skeleton className="rounded-lg" isLoaded={!loading}>
+                  <Input />
+                </Skeleton>
+                <Skeleton className="rounded-lg" isLoaded={!loading}>
+                  <Input />
+                </Skeleton>
+                <Skeleton className="rounded-lg" isLoaded={!loading}>
+                  <Input />
+                </Skeleton>
+              </>
             )}
             {!loading && (
               <>
-              <Input type="text" label="First Name" labelPlacement="outside" placeholder=" " value={firstName} onValueChange={setFirstName} validate={validateFirstName}></Input>
-              <Input type="text" label="Last Name" labelPlacement="outside" placeholder=" " value={lastName} onValueChange={setLastName} validate={validateLastName}></Input>
-              <Input type="text" label="Username" labelPlacement="outside" placeholder=" " value={username} onValueChange={setUsername} validate={validateUsername}></Input>
-              <Input type="text" id="email" label="Email" labelPlacement="outside" placeholder=" " value={email} onValueChange={setEmail} validate={validateEmail}></Input>
+                <Input
+                  label="First Name"
+                  labelPlacement="outside"
+                  placeholder=" "
+                  type="text"
+                  validate={validateFirstName}
+                  value={firstName}
+                  onValueChange={setFirstName}
+                />
+                <Input
+                  label="Last Name"
+                  labelPlacement="outside"
+                  placeholder=" "
+                  type="text"
+                  validate={validateLastName}
+                  value={lastName}
+                  onValueChange={setLastName}
+                />
+                <Input
+                  label="Username"
+                  labelPlacement="outside"
+                  placeholder=" "
+                  type="text"
+                  validate={validateUsername}
+                  value={username}
+                  onValueChange={setUsername}
+                />
+                <Input
+                  id="email"
+                  label="Email"
+                  labelPlacement="outside"
+                  placeholder=" "
+                  type="text"
+                  validate={validateEmail}
+                  value={email}
+                  onValueChange={setEmail}
+                />
               </>
             )}
           </CardBody>
-          <Divider/>
+          <Divider />
           <CardBody>
-            <Button color="default" className="text-base font-semibold text-white w-full" onPress={()=>{location.href="/reset-password"}}>Change Password</Button>
+            <Button
+              className="text-base font-semibold text-white w-full"
+              color="default"
+              onPress={() => {
+                location.href = "/reset-password";
+              }}
+            >
+              Change Password
+            </Button>
           </CardBody>
           <Divider />
           <CardFooter>
-            <Button type="submit" color="success" className="text-base font-semibold text-white w-full">Submit</Button>
+            <Button
+              className="text-base font-semibold text-white w-full"
+              color="success"
+              type="submit"
+            >
+              Submit
+            </Button>
           </CardFooter>
         </Form>
       </Card>

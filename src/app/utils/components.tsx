@@ -1,5 +1,5 @@
 "use client";
-import { FC, useEffect } from "react";
+import { EffectCallback, FC, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { tokenRefresh } from "./api";
@@ -65,4 +65,8 @@ export const UseAuth: FC<{ children: React.ReactNode }> = ({ children }) => {
   });
 
   return <>{children}</>;
+};
+
+export const useEffectOnce = (func: EffectCallback) => {
+  useEffect(func, []);
 };

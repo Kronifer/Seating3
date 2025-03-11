@@ -9,13 +9,14 @@ import {
   NavbarItem,
 } from "@heroui/navbar";
 import { Skeleton } from "@heroui/skeleton";
-import { useEffect, useState } from "react";
+import { Key, useEffect, useState } from "react";
 import {
   Dropdown,
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
 } from "@heroui/dropdown";
+import { addToast } from "@heroui/toast";
 
 import { getUser } from "@/utils/api";
 
@@ -48,6 +49,25 @@ export const Navbar = ({ activeIndex }: NavbarProps) => {
       setLoading(false);
     });
   });
+
+  function handleDropdown(key: Key) {
+    if (key == "logout") {
+      localStorage.removeItem("token");
+      localStorage.removeItem("expireAt");
+      addToast({
+        color: "success",
+        title: "Successfully logged out!",
+        timeout: 1000,
+      });
+      setTimeout(() => {
+        location.href = "/";
+      }, 1000);
+    } else if (key == "settings") {
+      location.href = "/user/settings";
+    } else {
+      location.href = "/user/events";
+    }
+  }
 
   return (
     <>
@@ -95,7 +115,10 @@ export const Navbar = ({ activeIndex }: NavbarProps) => {
               <DropdownTrigger>
                 <Avatar className="cursor-pointer" name={name} />
               </DropdownTrigger>
-              <DropdownMenu aria-label="Static Actions">
+              <DropdownMenu
+                aria-label="Static Actions"
+                onAction={handleDropdown}
+              >
                 <DropdownItem key="events">Events</DropdownItem>
                 <DropdownItem key="settings">Settings</DropdownItem>
                 <DropdownItem

@@ -8,13 +8,14 @@ import {
   NavbarItem,
 } from "@heroui/navbar";
 import { Skeleton } from "@heroui/skeleton";
-import { useEffect, useState } from "react";
+import { Key, useEffect, useState } from "react";
 import {
   Dropdown,
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
 } from "@heroui/dropdown";
+import { addToast } from "@heroui/toast";
 
 import { getUser } from "@/utils/api";
 
@@ -25,6 +26,23 @@ interface UserNavbarProps {
 export const UserNavbar = ({ activeIndex }: UserNavbarProps) => {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(true);
+
+  function handleDropdown(key: Key) {
+    if (key == "logout") {
+      localStorage.removeItem("token");
+      localStorage.removeItem("expireAt");
+      addToast({
+        color: "success",
+        title: "Successfully logged out!",
+        timeout: 1000,
+      });
+      setTimeout(() => {
+        location.href = "/";
+      }, 1000);
+    } else if (key == "settings") {
+      location.href = "/user/settings";
+    }
+  }
 
   useEffect(() => {
     var p = getUser()!;
@@ -81,7 +99,10 @@ export const UserNavbar = ({ activeIndex }: UserNavbarProps) => {
               <DropdownTrigger>
                 <Avatar className="cursor-pointer" name={name} />
               </DropdownTrigger>
-              <DropdownMenu aria-label="Static Actions">
+              <DropdownMenu
+                aria-label="Static Actions"
+                onAction={handleDropdown}
+              >
                 <DropdownItem key="settings">Settings</DropdownItem>
                 <DropdownItem
                   key="logout"

@@ -7,9 +7,9 @@ export interface Name {
 }
 
 export interface User {
-  name?: Name,
-  username?: string,
-  email?: string
+  name?: Name;
+  username?: string;
+  email?: string;
 }
 
 export function register(
@@ -269,20 +269,19 @@ export function updateUser(user: User) {
 
     return;
   }
+
   return fetch("/api/users/updateuser", {
     method: "POST",
     headers: {
-      "Authorization": localStorage.getItem("token")!,
-      "Content-Type": "application/json"
+      Authorization: localStorage.getItem("token")!,
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify(user)
-  })
-  .then(resp => {
-    if(resp.status == 200) {
+    body: JSON.stringify(user),
+  }).then((resp) => {
+    if (resp.status == 200) {
       return true;
-    }
-    else {
+    } else {
       return false;
     }
-  })
+  });
 }
