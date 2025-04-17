@@ -141,9 +141,12 @@ export class TableCanvas {
         this.cv = htmlElement;
         this.drawContext = this.cv.getContext("2d");
 
-        const dpr = window.devicePixelRatio;
-        const bbox = canvas.getBoundingClientRect();
-        this.drawContext.scale(bbox.width * dpr, bbox.height*dpr); 
+        let dpi = window.devicePixelRatio;
+        let style_height = +getComputedStyle(this.cv).getPropertyValue("height").slice(0, -2);
+        let style_width = +getComputedStyle(this.cv).getPropertyValue("width").slice(0, -2);
+
+        this.cv.setAttribute('height', style_height * dpi);
+        this.cv.setAttribute('width', style_width * dpi);
 
         this.cv.addEventListener('mousedown', (e)=>{
             this.mouseDown(e);

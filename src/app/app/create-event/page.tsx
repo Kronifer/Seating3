@@ -67,13 +67,20 @@ export default function CreateEventPage() {
       serializedTables.push({x:table.x, y:table.y, size:table.maxHolding})
     }
     const serializedMeals = meals.reduce((acc, { name, amount }) => name ? { ...acc, [name]: amount } : acc, {});  
-    createEvent(
+    const event = await createEvent(
       name,
       serializedTables,
       eventDate.toDate(getLocalTimeZone()).getTime(),
       serializedMeals,
       rsvpDate.toDate(getLocalTimeZone()).getTime()
     )
+    if(event === true){
+      addToast({title: "Success", description: "event created"}) 
+      await new Promise(r => setTimeout(r, 2000));
+      router.push("/");
+    }else{
+      addToast({title: "Api Error", description: event}) 
+    }
   }
 
   useEffect(()=>{
@@ -111,7 +118,7 @@ export default function CreateEventPage() {
       text:"When is the latest people can register for this event?",
       content:(
         // @ts-ignore
-        <DatePicker className="max-w-[284px]" label="Birth date" value={rsvpDate} onChange={setRsvpDate}/>
+        <DatePicker className="max-w-[284px]" label="RSVP Date" value={rsvpDate} onChange={setRsvpDate}/>
       )
     },
     {

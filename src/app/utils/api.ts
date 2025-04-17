@@ -109,6 +109,9 @@ export async function createEvent(eventName: string, tableEntries: object, event
       return (await set_meals.json());
 
     
+    return true;
+
+    
 }
 
 export function verifyEmail(email: string, code: string) {
