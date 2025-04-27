@@ -221,6 +221,8 @@ export default function CreateEventPage() {
               </TableBody>
             </Table>
           </div>
+          <br />
+          <br />
           <Input
             label="Meal Name"
             labelPlacement="outside"
