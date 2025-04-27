@@ -54,64 +54,76 @@ export function register(
     });
 }
 
-interface TableEntry{
-  x: number
-  y: number
-  size: number
+interface TableEntry {
+  x: number;
+  y: number;
+  size: number;
 }
 
-export async function createEvent(eventName: string, tableEntries: object, eventDate: number, meals:object, rsvpBy: number){ //tableEntries:{"x":0, "y":0, "size":5} meals:{"salmon":5, "cheese":1}
-    const create_event = await fetch("/api/events/create", {
-      method:"POST",
-      headers: {
-        "Content-Type":"application/json",
-      },
-      body:JSON.stringify({
-        "name":eventName,
-        "date":eventDate,
-        "rsvpBy": rsvpBy
-      })
-    })
+export async function createEvent(
+  eventName: string,
+  tableEntries: object,
+  eventDate: number,
+  meals: object,
+  rsvpBy: number,
+) {
+  //tableEntries:{"x":0, "y":0, "size":5} meals:{"salmon":5, "cheese":1}
+  if (
+    localStorage.getItem("token") == null ||
+    parseInt(localStorage.getItem("expireBy")!) < Date.now() / 1000
+  ) {
+    tokenRefresh();
 
-    const eventJson = await create_event.json();
+    return;
+  }
+  const create_event = await fetch("/api/events/create", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: localStorage.getItem("token")!,
+    },
+    body: JSON.stringify({
+      name: eventName,
+      date: eventDate,
+      rsvpBy: rsvpBy,
+    }),
+  });
 
-    if ((eventJson['status']) != 'success') 
-      return eventJson;
+  const eventJson = await create_event.json();
 
-    const event_id = eventJson['eventId'] //?
+  if (eventJson["status"] != "success") return false;
 
-    const arrange_event = await fetch("/api/events/arrange", {
-      method:"POST",
-      headers: {
-        "Content-Type":"application/json",
-      },
-      body: JSON.stringify({
-        "eventId":event_id,
-        "tableEntries":tableEntries
-      })
-    })
+  const event_id = eventJson["eventId"]; //?
 
-    if (((await arrange_event.json())['status']) != 'success') 
-      return (await arrange_event.json());
+  const arrange_event = await fetch("/api/events/arrange", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: localStorage.getItem("token")!,
+    },
+    body: JSON.stringify({
+      eventId: event_id,
+      tableEntries: tableEntries,
+    }),
+  });
 
-    const set_meals = await fetch("/api/events/meals/options", {
-        method:"POST",
-        headers: {
-          "Content-Type":"application/json",
-        },
-        body: JSON.stringify({
-          "eventId":event_id,
-          "meals":meals
-        })
-    })
+  if ((await arrange_event.json())["status"] != "success") return false;
 
-    if (((await set_meals.json())['status']) != 'success') 
-      return (await set_meals.json());
+  const set_meals = await fetch("/api/events/meals/options", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: localStorage.getItem("token")!,
+    },
+    body: JSON.stringify({
+      eventId: event_id,
+      meals: meals,
+    }),
+  });
 
-    
-    return true;
+  if ((await set_meals.json())["status"] != "success") return false;
 
-    
+  return true;
 }
 
 export function verifyEmail(email: string, code: string) {

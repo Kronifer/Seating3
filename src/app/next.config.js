@@ -13,6 +13,10 @@ const nextConfig = {
             {
                 source: "/api/seats/:path",
                 destination: "http://seatingapi/api/seats/:path"
+            },
+            {
+                source: "/api/events/meals/:path",
+                destination: "http://seatingapi/api/events/meals/:path"
             }
         ]
     }

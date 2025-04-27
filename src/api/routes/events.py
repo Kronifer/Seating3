@@ -52,10 +52,14 @@ def schedule_event(user, db):
         }
     )
 
-    return {"status": "success", "msg": "Event successfully created"}, 201, {"Content-Type": "application/json"}
+    return (
+        {"status": "success", "msg": "Event successfully created", "eventId": event_id},
+        201,
+        {"Content-Type": "application/json"},
+    )
 
 
-#TODO: FIX THIS TO GET ALL EVENTS THE USER HAS NOT JUST THE EVENTS HE OWNS
+# TODO: FIX THIS TO GET ALL EVENTS THE USER HAS NOT JUST THE EVENTS HE OWNS
 @events.route("/my_events", methods=["GET"])
 @decorators.access_database("events")
 @decorators.authenticated
@@ -63,7 +67,9 @@ def get_events(user, db):
     events = db["events"]
     all_events = events.find({"owner": user["username"]})
 
-    return jsonify([{"eventId": event["eventId"], "name": event["name"], "is_owner":(event['owner'])} for event in all_events])
+    return jsonify(
+        [{"eventId": event["eventId"], "name": event["name"], "is_owner": (event["owner"])} for event in all_events]
+    )
 
 
 @events.route("/get", methods=["GET"])
