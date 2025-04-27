@@ -121,11 +121,12 @@ export default function CreateEventPage() {
     {
       text: "When does this event take place?",
       content: (
-        // @ts-ignore
         <DatePicker
           className="max-w-[284px]"
           label="Event Date"
+          //@ts-ignore
           value={eventDate}
+          //@ts-ignore
           onChange={setEventDate}
         />
       ),
@@ -133,11 +134,12 @@ export default function CreateEventPage() {
     {
       text: "When is the latest people can register for this event?",
       content: (
-        // @ts-ignore
         <DatePicker
           className="max-w-[284px]"
           label="RSVP Date"
+          //@ts-ignore
           value={rsvpDate}
+          //@ts-ignore
           onChange={setRsvpDate}
         />
       ),
