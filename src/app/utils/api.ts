@@ -54,6 +54,78 @@ export function register(
     });
 }
 
+interface TableEntry {
+  x: number;
+  y: number;
+  size: number;
+}
+
+export async function createEvent(
+  eventName: string,
+  tableEntries: object,
+  eventDate: number,
+  meals: object,
+  rsvpBy: number,
+) {
+  //tableEntries:{"x":0, "y":0, "size":5} meals:{"salmon":5, "cheese":1}
+  if (
+    localStorage.getItem("token") == null ||
+    parseInt(localStorage.getItem("expireBy")!) < Date.now() / 1000
+  ) {
+    tokenRefresh();
+
+    return;
+  }
+  const create_event = await fetch("/api/events/create", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: localStorage.getItem("token")!,
+    },
+    body: JSON.stringify({
+      name: eventName,
+      date: eventDate,
+      rsvpBy: rsvpBy,
+    }),
+  });
+
+  const eventJson = await create_event.json();
+
+  if (eventJson["status"] != "success") return false;
+
+  const event_id = eventJson["eventId"]; //?
+
+  const arrange_event = await fetch("/api/events/arrange", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: localStorage.getItem("token")!,
+    },
+    body: JSON.stringify({
+      eventId: event_id,
+      tableEntries: tableEntries,
+    }),
+  });
+
+  if ((await arrange_event.json())["status"] != "success") return false;
+
+  const set_meals = await fetch("/api/events/meals/options", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: localStorage.getItem("token")!,
+    },
+    body: JSON.stringify({
+      eventId: event_id,
+      meals: meals,
+    }),
+  });
+
+  if ((await set_meals.json())["status"] != "success") return false;
+
+  return true;
+}
+
 export function verifyEmail(email: string, code: string) {
   return fetch("/api/users/verifyemail", {
     method: "POST",
