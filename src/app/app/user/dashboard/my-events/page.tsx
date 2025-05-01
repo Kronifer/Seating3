@@ -115,6 +115,7 @@ export default function MyEventsPage() {
                     e.date.getFullYear()}
                 </li>
                 <li>Registered Parties: {e.registered_count}</li>
+                <li>Invite Code: {e.eventId}</li>
               </ul>
             </CardBody>
             <Divider />

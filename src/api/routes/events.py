@@ -68,7 +68,16 @@ def get_events(user, db):
     all_events = events.find({"owner": user["username"]})
 
     return jsonify(
-        [{"eventId": event["eventId"], "name": event["name"], "is_owner": (event["owner"])} for event in all_events]
+        [
+            {
+                "eventId": event["eventId"],
+                "name": event["name"],
+                "is_owner": (event["owner"]),
+                "date": event["date"],
+                "registered_count": len(event["registered"]),
+            }
+            for event in all_events
+        ]
     )
 
 
