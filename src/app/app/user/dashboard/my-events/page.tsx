@@ -86,7 +86,7 @@ export default function MyEventsPage() {
   return (
     <div className="flex flex-row w-full space-x-[1%]">
       <Button
-        className="w-[30lvh] h-[24lvh] text-2xl shrink-0"
+        className="w-[30lvh] h-[25lvh] text-2xl shrink-0"
         disableAnimation={true}
         variant="flat"
         onPress={(_) => {
@@ -99,7 +99,7 @@ export default function MyEventsPage() {
         e.date = new Date(Date.parse(e.date));
 
         return (
-          <Card key={e.eventId} className="w-[30lvh] h-[24lvh] shrink-0">
+          <Card key={e.eventId} className="w-[30lvh] h-[25lvh] shrink-0">
             <CardHeader>
               <h1 className="text-2xl">{e.name}</h1>
             </CardHeader>
