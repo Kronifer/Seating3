@@ -45,7 +45,11 @@ export const UserNavbar = ({ activeIndex }: UserNavbarProps) => {
   }
 
   useEffect(() => {
-    var p = getUser()!;
+    var p = getUser();
+    if(p === undefined) {
+      location.href = "/";
+      return;
+    }
 
     p.then((json) => {
       setName(json.name.first);
