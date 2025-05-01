@@ -50,7 +50,18 @@ export default async function RootLayout({
         <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
           <div className="relative flex flex-col h-screen">
             {path == "/" && <Navbar activeIndex={0} />}
-            {path!.includes("/user") && <UserNavbar />}
+            {path!.includes("/user") && (
+              <>
+                {(path!.includes("/my-events") ||
+                  path!.includes("/create-event")) && (
+                  <UserNavbar activeIndex={0} />
+                )}
+                {(path!.includes("/joined-events") ||
+                  path!.includes("/join-event")) && (
+                  <UserNavbar activeIndex={1} />
+                )}
+              </>
+            )}
             <main className="container mx-auto max-w-7xl pt-16 px-6 flex-grow">
               <RefreshToken>{children}</RefreshToken>
             </main>

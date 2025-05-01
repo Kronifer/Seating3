@@ -65,7 +65,7 @@ export const Navbar = ({ activeIndex }: NavbarProps) => {
     } else if (key == "settings") {
       location.href = "/user/settings";
     } else {
-      location.href = "/user/events";
+      location.href = "/user/dashboard/my-events";
     }
   }
 

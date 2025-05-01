@@ -12,6 +12,19 @@ export interface User {
   email?: string;
 }
 
+function getToken() {
+  if (
+    localStorage.getItem("token") == null ||
+    parseInt(localStorage.getItem("expireAt")!) < Date.now() / 1000
+  ) {
+    tokenRefresh();
+
+    return;
+  }
+
+  return localStorage.getItem("token")!;
+}
+
 export function register(
   name: Name,
   username: string,
@@ -68,19 +81,16 @@ export async function createEvent(
   rsvpBy: number,
 ) {
   //tableEntries:{"x":0, "y":0, "size":5} meals:{"salmon":5, "cheese":1}
-  if (
-    localStorage.getItem("token") == null ||
-    parseInt(localStorage.getItem("expireBy")!) < Date.now() / 1000
-  ) {
-    tokenRefresh();
+  var token = getToken();
 
+  if (token == undefined) {
     return;
   }
   const create_event = await fetch("/api/events/create", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: localStorage.getItem("token")!,
+      Authorization: token,
     },
     body: JSON.stringify({
       name: eventName,
@@ -99,7 +109,7 @@ export async function createEvent(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: localStorage.getItem("token")!,
+      Authorization: token,
     },
     body: JSON.stringify({
       eventId: event_id,
@@ -113,7 +123,7 @@ export async function createEvent(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: localStorage.getItem("token")!,
+      Authorization: token,
     },
     body: JSON.stringify({
       eventId: event_id,
@@ -311,19 +321,16 @@ export function validateCode(email: string, code: string, scope: string) {
 }
 
 export function getUser() {
-  if (
-    localStorage.getItem("token") == null ||
-    parseInt(localStorage.getItem("expireBy")!) < Date.now() / 1000
-  ) {
-    tokenRefresh();
+  var token = getToken();
 
+  if (token == undefined) {
     return;
   }
 
   return fetch("/api/users/getuser", {
     method: "GET",
     headers: {
-      Authorization: localStorage.getItem("token")!,
+      Authorization: token,
     },
   }).then((resp) => {
     return resp.json().then((data) => {
@@ -333,22 +340,68 @@ export function getUser() {
 }
 
 export function updateUser(user: User) {
-  if (
-    localStorage.getItem("token") == null ||
-    parseInt(localStorage.getItem("expireBy")!) < Date.now() / 1000
-  ) {
-    tokenRefresh();
+  var token = getToken();
 
+  if (token == undefined) {
     return;
   }
 
   return fetch("/api/users/updateuser", {
     method: "POST",
     headers: {
-      Authorization: localStorage.getItem("token")!,
+      Authorization: token,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(user),
+  }).then((resp) => {
+    if (resp.status == 200) {
+      return true;
+    } else {
+      return false;
+    }
+  });
+}
+
+export function getEvents() {
+  var token = getToken();
+
+  if (token == undefined) {
+    return;
+  }
+
+  return fetch("/api/events/my_events", {
+    headers: {
+      Authorization: token,
+    },
+  })
+    .then((resp) => {
+      return resp.json().then((data) => ({ status: resp.status, json: data }));
+    })
+    .then((r) => {
+      if (r.status == 200) {
+        return r.json;
+      } else {
+        return { status: "error", msg: "API Error" };
+      }
+    });
+}
+
+export function deleteEvent(eventId: string) {
+  var token = getToken();
+
+  if (token == undefined) {
+    return;
+  }
+
+  return fetch("/api/events/delete", {
+    method: "DELETE",
+    headers: {
+      Authorization: token,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      eventId: eventId,
+    }),
   }).then((resp) => {
     if (resp.status == 200) {
       return true;

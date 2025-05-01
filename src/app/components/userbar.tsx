@@ -82,10 +82,14 @@ export const UserNavbar = ({ activeIndex }: UserNavbarProps) => {
         </NavbarBrand>
         <NavbarContent justify="center">
           <NavbarItem isActive={activeIndex == 0}>
-            <Link color="foreground">My Events</Link>
+            <Link color="foreground" href="/user/dashboard/my-events">
+              My Events
+            </Link>
           </NavbarItem>
           <NavbarItem isActive={activeIndex == 1}>
-            <Link color="foreground">Joined Events</Link>
+            <Link color="foreground" href="/user/dashboard/joined-events">
+              Joined Events
+            </Link>
           </NavbarItem>
         </NavbarContent>
         <NavbarContent justify="end">

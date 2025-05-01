@@ -87,7 +87,7 @@ export default function CreateEventPage() {
     if (event === true) {
       addToast({ title: "Success", description: "event created" });
       await new Promise((r) => setTimeout(r, 2000));
-      router.push("/");
+      location.href = "/user/dashboard/my-events";
     } else {
       addToast({ title: "Api Error", description: "Something went wrong" });
     }
