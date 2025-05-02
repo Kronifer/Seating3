@@ -379,7 +379,7 @@ def register_event(user, db):
     if event["rsvpBy"] is not None and t.timestamp() >= event["rsvpBy"].timestamp():
         return {"status": "error", "msg": "You can no longer register for this event"}, 400
 
-    event["registered"][user["username"]] = {"party": None, "table": None, "meals": []}
+    event["registered"][user["username"]] = {"party": None, "table": None, "meals": [], "notes": None}
 
     events.update_one({"eventId": event_id}, {"$set": event})
 
