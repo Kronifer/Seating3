@@ -81,6 +81,44 @@ def get_events(user, db):
     )
 
 
+@events.route("/joined_events", methods=["GET"])
+@decorators.access_database("events")
+@decorators.authenticated
+def get_joined_events(user, db):
+    events = db["events"]
+    joined_events = events.find({"registered.{}".format(user["username"]): {"$exists": True}})
+
+    return (
+        jsonify(
+            [
+                {
+                    "eventId": event["eventId"],
+                    "name": event["name"],
+                    "owner": event["owner"],
+                    "date": event["date"],
+                    "party_size": (
+                        event["registered"][user["username"]]["party"]
+                        if event["registered"][user["username"]]["party"] is not None
+                        else "Unknown"
+                    ),
+                    "table": (
+                        event["registered"][user["username"]]["table"]
+                        if event["registered"][user["username"]]["table"] is not None
+                        else "Unknown"
+                    ),
+                    "meals": (
+                        event["registered"][user["username"]]["meals"]
+                        if event["registered"][user["username"]]["meals"] is not None
+                        else "Unknown"
+                    ),
+                }
+                for event in joined_events
+            ]
+        ),
+        200,
+    )
+
+
 @events.route("/get", methods=["GET"])
 @decorators.access_database("events")
 @decorators.authenticated
