@@ -99,17 +99,12 @@ def get_joined_events(user, db):
                     "party_size": (
                         event["registered"][user["username"]]["party"]
                         if event["registered"][user["username"]]["party"] is not None
-                        else "Unknown"
+                        else "Not Selected"
                     ),
                     "table": (
                         event["registered"][user["username"]]["table"]
                         if event["registered"][user["username"]]["table"] is not None
-                        else "Unknown"
-                    ),
-                    "meals": (
-                        event["registered"][user["username"]]["meals"]
-                        if event["registered"][user["username"]]["meals"] is not None
-                        else "Unknown"
+                        else "Not Selected"
                     ),
                 }
                 for event in joined_events
@@ -137,6 +132,23 @@ def get_event(user, db):
     return event, 200, {"Content-Type": "application/json"}
 
 
+@events.route("/get_joined", methods=["POST"])
+@decorators.access_database("events")
+@decorators.authenticated
+def get_joined_event(user, db):
+    event_id = request.get_json().get("eventId", None)
+    if event_id is None:
+        return {"status": "error", "msg": "missing required field: eventId"}, 400, {"Content-Type": "application/json"}
+    event = db["events"].find_one({"eventId": event_id, "registered.{}".format(user["username"]): {"$exists": True}})
+    if event is None:
+        return (
+            {"status": "error", "msg": "No such event exists, or you do not own this event"},
+            404,
+            {"Content-Type": "application/json"},
+        )
+    return event["registered"][user["username"]], 200, {"Content-Type": "application/json"}
+
+
 @events.route("/delete", methods=["DELETE"])
 @decorators.access_database("events")
 @decorators.authenticated
@@ -159,6 +171,25 @@ def delete_event(user, db):
     events.delete_one({"eventId": event_id, "owner": user["username"]})
 
     return {"status": "success", "msg": "Event deleted"}, 200, {"Content-Type": "application/json"}
+
+
+@events.route("/delete_booking", methods=["DELETE"])
+@decorators.access_database("events")
+@decorators.authenticated
+def delete_booking(user, db):
+    event_id = request.get_json().get("eventId", None)
+    if event_id is None:
+        return {"status": "error", "msg": "missing required field: eventId"}, 400, {"Content-Type": "application/json"}
+    event = db["events"].find_one({"eventId": event_id, "registered.{}".format(user["username"]): {"$exists": True}})
+    if event is None:
+        return (
+            {"status": "error", "msg": "No such event exists, or you have not registered for this event"},
+            404,
+            {"Content-Type": "application/json"},
+        )
+    del event["registered"][user["username"]]
+    db["events"].find_one_and_update({"eventId": event_id}, {"$set": event})
+    return {"status": "success", "msg": "Booking deleted"}, 200, {"Content-Type": "application/json"}
 
 
 @events.route("/arrange", methods=["POST"])

@@ -410,3 +410,52 @@ export function deleteEvent(eventId: string) {
     }
   });
 }
+
+export function deleteBooking(eventId: string) {
+  var token = getToken();
+
+  if (token == undefined) {
+    return;
+  }
+
+  return fetch("/api/events/delete_booking", {
+    method: "DELETE",
+    headers: {
+      Authorization: token,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      eventId: eventId,
+    }),
+  }).then((resp) => {
+    if (resp.status == 200) {
+      return true;
+    } else {
+      return false;
+    }
+  });
+}
+
+export function getJoinedEvents() {
+  var token = getToken();
+
+  if (token == undefined) {
+    return;
+  }
+
+  return fetch("/api/events/joined_events", {
+    headers: {
+      Authorization: token,
+    },
+  })
+    .then((resp) => {
+      return resp.json().then((data) => ({ status: resp.status, json: data }));
+    })
+    .then((r) => {
+      if (r.status == 200) {
+        return r.json;
+      } else {
+        return { status: "error", msg: "API Error" };
+      }
+    });
+}

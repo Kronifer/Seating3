@@ -104,7 +104,7 @@ export default function MyEventsPage() {
               <h1 className="text-2xl">{e.name}</h1>
             </CardHeader>
             <Divider />
-            <CardBody className="justify-center">
+            <CardBody className="justify-center overflow-hidden">
               <ul>
                 <li>
                   Date:{" "}
