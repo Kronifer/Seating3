@@ -41,6 +41,7 @@ export default function CreateEventPage() {
   );
   const [tableCanvas, setTableCanvas] = useState(new TableCanvas([]));
   const [nextTableSize, setNextTableSize] = useState(1);
+  const [tableId, setTableId] = useState(0);
   const [meals, setMeals] = useState<
     { key: number; name: string; amount: number; infinite: boolean }[]
   >([]);
@@ -153,6 +154,7 @@ export default function CreateEventPage() {
             id="tables"
           />
           <div className="flex w-[720px] gap-4 items-center justify-center">
+            <Button onPress={(_) => {tableCanvas.tables = []; tableCanvas.render(); setTableId(0);}} color="danger">Clear Tables</Button>
             <Slider
               className="max-w-md"
               defaultValue={1}
@@ -169,13 +171,30 @@ export default function CreateEventPage() {
               id="addTable"
               onPress={(_) => {
                 tableCanvas.addTable(
-                  new CircularTable(200, 200, 30, 0, nextTableSize),
+                  new CircularTable(200, 200, 6, 0, nextTableSize, tableId),
                 );
+                setTableId((tableId) => tableId + 1);
                 tableCanvas.render();
               }}
             >
               Add Table
             </Button>
+          </div>
+          <div>
+            <Table>
+              <TableHeader>
+                <TableColumn>TABLE</TableColumn>
+                <TableColumn>SIZE</TableColumn>
+              </TableHeader>
+              <TableBody items={tableCanvas.tables}>
+                {(item: CircularTable) => (
+                  <TableRow key={item.tableId}>
+                    <TableCell>{item.tableId+1}</TableCell>
+                    <TableCell><Input className="w-[3lvw]" defaultValue={item.maxHolding} onValueChange={(v) => {tableCanvas.tables[tableCanvas.tables.indexOf(item)].maxHolding = parseInt(v)}}></Input></TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
         </>
       ),

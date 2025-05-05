@@ -34,10 +34,11 @@ export class BaseTable {
 }
 
 export class CircularTable extends BaseTable {
-    constructor(x, y, diameter, holding, maxHolding){
+    constructor(x, y, diameter, holding, maxHolding, tableId){
         super(x, y, TableTypes.CIRCLE, holding, maxHolding);
 
         this.diameter = diameter;
+        this.tableId = tableId;
     }
 
     isBounding(mouseUpdateEvent, attachedCanvas){
@@ -53,7 +54,7 @@ export class CircularTable extends BaseTable {
 
     render(drawContext){
         drawContext.beginPath();
-        drawContext.arc(this.x, this.y, this.diameter, 0, 2 * Math.PI);
+        drawContext.arc(this.x, this.y, ((this.diameter/100)*document.documentElement.clientHeight), 0, 2 * Math.PI);
         drawContext.fillStyle = "#737373";
         drawContext.fill();
         drawContext.lineWidth = 4;
@@ -61,11 +62,11 @@ export class CircularTable extends BaseTable {
         drawContext.stroke();
 
         drawContext.fillStyle = "black";
-        drawContext.font = "15px monospace";
+        drawContext.font = "3lvh monospace";
         drawContext.textAlign = "center"
-        drawContext.fillText(this.maxHolding, this.x, this.y+(5));
+        drawContext.fillText(this.tableId+1, this.x, this.y+(5));
     }
-    
+
 }
 
 
@@ -90,7 +91,7 @@ export class SquareTable extends BaseTable {
 
     render(drawContext){
         drawContext.beginPath();
-        drawContext.arc(this.x, this.y, this.diameter, 0, 2 * Math.PI);
+        drawContext.arc(this.x, this.y, ((this.diameter/100)*document.documentElement.clientHeight), 0, 2 * Math.PI);
         drawContext.fillStyle = "#737373";
         drawContext.fill();
         drawContext.lineWidth = 4;
@@ -102,7 +103,7 @@ export class SquareTable extends BaseTable {
         drawContext.textAlign = "center"
         drawContext.fillText(this.maxHolding, this.x, this.y+(5));
     }
-    
+
 }
 
 
@@ -136,6 +137,12 @@ export class TableCanvas {
         table.parent = this;
     }
 
+    removeTable(index){
+        this.tables.splice(index, 1);
+        console.log(this.tables);
+        this.render();
+    }
+
     initHtml(htmlElement){
         console.log("[canvas] inithtml");
         this.cv = htmlElement;
@@ -151,7 +158,7 @@ export class TableCanvas {
         this.cv.addEventListener('mousedown', (e)=>{
             this.mouseDown(e);
         });
-        
+
         this.cv.addEventListener('mouseup', (e)=>{
             this.mouseUp(e);
         });
