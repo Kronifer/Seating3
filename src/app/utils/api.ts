@@ -459,3 +459,42 @@ export function getJoinedEvents() {
       }
     });
 }
+
+export function getEventInfo(eventId: string) {
+  var token = getToken();
+
+  if (token == undefined) {
+    return;
+  }
+
+  return fetch("/api/events/get?eventId=" + eventId, {
+    method: "GET",
+  }).then((resp) => {
+    return resp.json().then((data) => ({ status: resp.status, json: data }));
+  });
+}
+
+export function joinEvent(eventId: string) {
+  var token = getToken();
+
+  if (token == undefined) {
+    return;
+  }
+
+  return fetch("/api/events/register", {
+    method: "POST",
+    headers: {
+      Authorization: token,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      eventId: eventId,
+    }),
+  }).then((resp) => {
+    if (resp.status == 200) {
+      return true;
+    } else {
+      return false;
+    }
+  });
+}

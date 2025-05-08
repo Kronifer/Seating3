@@ -116,16 +116,28 @@ def get_joined_events(user, db):
 
 @events.route("/get", methods=["GET"])
 @decorators.access_database("events")
-@decorators.authenticated
+@decorators.auth_optional
 def get_event(user, db):
-    event_id = request.get_json().get("eventId", None)
+    event_id = request.args.get("eventId", None)
     if event_id is None:
         return {"status": "error", "msg": "missing required field: eventId"}, 400, {"Content-Type": "application/json"}
-    event = db["events"].find_one({"eventId": event_id, "owner": user["username"]})
+    event = db["events"].find_one({"eventId": event_id})
     if event is None:
         return (
-            {"status": "error", "msg": "No such event exists, or you do not own this event"},
+            {"status": "error", "msg": "No such event exists"},
             404,
+            {"Content-Type": "application/json"},
+        )
+    if user is None or event["owner"] != user["username"]:
+        return (
+            {
+                "name": event["name"],
+                "owner": event["owner"],
+                "date": event["date"],
+                "rsvpBy": event["rsvpBy"],
+                "register_count": len(event["registered"]),
+            },
+            200,
             {"Content-Type": "application/json"},
         )
     del event["_id"]

@@ -5,7 +5,7 @@ import { Card, CardBody, CardFooter, CardHeader } from "@heroui/card";
 import { Input } from "@heroui/input";
 import { addToast } from "@heroui/toast";
 import { useRouter } from "next/navigation";
-import { today, getLocalTimeZone, DateValue } from "@internationalized/date";
+import { getLocalTimeZone, DateValue, now } from "@internationalized/date";
 import { DatePicker } from "@heroui/date-picker";
 import { useState, useEffect } from "react";
 import { Slider } from "@heroui/slider";
@@ -34,10 +34,10 @@ import { CircularTable, TableCanvas } from "@/utils/tables";
 export default function CreateEventPage() {
   const [name, setName] = useState("");
   const [eventDate, setEventDate] = useState<DateValue>(
-    today(getLocalTimeZone()) as DateValue,
+    now(getLocalTimeZone()) as DateValue,
   );
   const [rsvpDate, setRsvpDate] = useState<DateValue>(
-    today(getLocalTimeZone()) as DateValue,
+    now(getLocalTimeZone()) as DateValue,
   );
   const [tableCanvas, setTableCanvas] = useState(new TableCanvas([]));
   const [nextTableSize, setNextTableSize] = useState(1);
@@ -53,6 +53,20 @@ export default function CreateEventPage() {
   const [mealAmount, setMealAmount] = useState(1);
   const [mealName, setMealName] = useState("");
   const [mealKey, setMealKey] = useState(0);
+  const month = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
 
   useEffectOnce(() => {
     setTableCanvas(new TableCanvas([]));
@@ -123,6 +137,8 @@ export default function CreateEventPage() {
       text: "When does this event take place?",
       content: (
         <DatePicker
+          hideTimeZone
+          showMonthAndYearPickers
           className="max-w-[284px]"
           label="Event Date"
           //@ts-ignore
@@ -136,6 +152,8 @@ export default function CreateEventPage() {
       text: "When is the latest people can register for this event?",
       content: (
         <DatePicker
+          hideTimeZone
+          showMonthAndYearPickers
           className="max-w-[284px]"
           label="RSVP Date"
           //@ts-ignore
@@ -154,7 +172,16 @@ export default function CreateEventPage() {
             id="tables"
           />
           <div className="flex w-[720px] gap-4 items-center justify-center">
-            <Button onPress={(_) => {tableCanvas.tables = []; tableCanvas.render(); setTableId(0);}} color="danger">Clear Tables</Button>
+            <Button
+              color="danger"
+              onPress={(_) => {
+                tableCanvas.tables = [];
+                tableCanvas.render();
+                setTableId(0);
+              }}
+            >
+              Clear Tables
+            </Button>
             <Slider
               className="max-w-md"
               defaultValue={1}
@@ -171,7 +198,7 @@ export default function CreateEventPage() {
               id="addTable"
               onPress={(_) => {
                 tableCanvas.addTable(
-                  new CircularTable(200, 200, 6, 0, nextTableSize, tableId),
+                  new CircularTable(200, 200, 250, 0, nextTableSize, tableId),
                 );
                 setTableId((tableId) => tableId + 1);
                 tableCanvas.render();
@@ -189,8 +216,18 @@ export default function CreateEventPage() {
               <TableBody items={tableCanvas.tables}>
                 {(item: CircularTable) => (
                   <TableRow key={item.tableId}>
-                    <TableCell>{item.tableId+1}</TableCell>
-                    <TableCell><Input className="w-[3lvw]" defaultValue={item.maxHolding} onValueChange={(v) => {tableCanvas.tables[tableCanvas.tables.indexOf(item)].maxHolding = parseInt(v)}}></Input></TableCell>
+                    <TableCell>{item.tableId + 1}</TableCell>
+                    <TableCell>
+                      <Input
+                        className="w-[3lvw]"
+                        defaultValue={item.maxHolding}
+                        onValueChange={(v) => {
+                          tableCanvas.tables[
+                            tableCanvas.tables.indexOf(item)
+                          ].maxHolding = parseInt(v);
+                        }}
+                      />
+                    </TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -290,8 +327,22 @@ export default function CreateEventPage() {
       content: (
         <>
           <h3>{name}</h3>
-          <h6>When: {eventDate.toString()}</h6>
-          <h6>Latest Registration: {rsvpDate.toString()}</h6>
+          <h6>
+            When:{" "}
+            {month[rsvpDate.month - 1] +
+              " " +
+              rsvpDate.day +
+              ", " +
+              rsvpDate.year}
+          </h6>
+          <h6>
+            Latest Registration:{" "}
+            {month[rsvpDate.month - 1] +
+              " " +
+              rsvpDate.day +
+              ", " +
+              rsvpDate.year}
+          </h6>
           <h6>Meals: {Object.keys(meals).length} options</h6>
         </>
       ),

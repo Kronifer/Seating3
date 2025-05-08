@@ -4,6 +4,27 @@ export const TableTypes = {
     CIRCLE: "TABLE_CIRCLE"
 }
 
+function getDPI() {
+    // Create a temporary element
+    let div = document.createElement("div");
+    div.style.width = "1in"; // Set width to 1 inch
+    div.style.height = "1in"; // Set height to 1 inch
+    div.style.position = "absolute";
+    div.style.top = "-100%"; // Position it off-screen
+    document.body.appendChild(div);
+
+    // Calculate the DPI
+    let dpi = {
+        x: div.offsetWidth,
+        y: div.offsetHeight
+    };
+
+    // Remove the temporary element
+    document.body.removeChild(div);
+
+    return dpi;
+}
+
 export class BaseTable {
     constructor(x, y, shape, holding, maxHolding){
         this.holding = holding;
@@ -54,7 +75,7 @@ export class CircularTable extends BaseTable {
 
     render(drawContext){
         drawContext.beginPath();
-        drawContext.arc(this.x, this.y, ((this.diameter/100)*document.documentElement.clientHeight), 0, 2 * Math.PI);
+        drawContext.arc(this.x, this.y, ((this.diameter/100/getDPI().x)*document.getElementById("tables").clientWidth), 0, 2 * Math.PI);
         drawContext.fillStyle = "#737373";
         drawContext.fill();
         drawContext.lineWidth = 4;
@@ -62,7 +83,7 @@ export class CircularTable extends BaseTable {
         drawContext.stroke();
 
         drawContext.fillStyle = "black";
-        drawContext.font = "3lvh monospace";
+        drawContext.font = "2lvh monospace";
         drawContext.textAlign = "center"
         drawContext.fillText(this.tableId+1, this.x, this.y+(5));
     }
@@ -91,7 +112,7 @@ export class SquareTable extends BaseTable {
 
     render(drawContext){
         drawContext.beginPath();
-        drawContext.arc(this.x, this.y, ((this.diameter/100)*document.documentElement.clientHeight), 0, 2 * Math.PI);
+        drawContext.arc(this.x, this.y, ((this.diameter/100/getDPI().x)*document.getElementById("tables").clientWidth), 0, 2 * Math.PI);
         drawContext.fillStyle = "#737373";
         drawContext.fill();
         drawContext.lineWidth = 4;
@@ -119,7 +140,7 @@ export class TableCanvas {
     static deserializeAndLock(tables){
         const tableObjs = [];
         for(const table of tables){
-            tableObjs.push(new CircularTable(table['x'], table['y'], table['size']*3, 0, table['size']))
+            tableObjs.push(new CircularTable(table['x'], table['y'], ((table['diameter']/100/getDPI(x))*document.getElementById("tables").clientWidth), 0, table['size']))
         }
         this.blockMovement = true;
         return tableObjs;
@@ -128,7 +149,7 @@ export class TableCanvas {
     serialize(){
         const tableJson = [];
         for(const table of this.tables){
-            tableJson.push({x:table.x, y:table.y, size:table.maxHolding})
+            tableJson.push({x:table.x, y:table.y, size:table.maxHolding, diameter:table.diameter})
         }
     }
 
