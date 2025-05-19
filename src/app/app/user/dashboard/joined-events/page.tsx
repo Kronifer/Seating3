@@ -132,7 +132,7 @@ export default function MyEventsPage() {
                     ":" +
                     e.rsvpBy.getMinutes().toString().padStart(2, "0")}
                 </li>
-                <li>Table Number: {e.table + 1}</li>
+                <li>Table Number: {typeof e.table == "number" ? e.table + 1 : e.table}</li>
                 <li>Seats Booked: {e.party_size}</li>
               </ul>
             </CardBody>
