@@ -96,6 +96,7 @@ def get_joined_events(user, db):
                     "name": event["name"],
                     "owner": event["owner"],
                     "date": event["date"],
+                    "rsvpBy": event["rsvpBy"],
                     "party_size": (
                         event["registered"][user["username"]]["party"]
                         if event["registered"][user["username"]]["party"] is not None
@@ -314,7 +315,7 @@ def update_meals(user, db):
 @decorators.authenticated
 def available_meals(user, db):
     events = db["events"]
-    event_id = request.get_json().get("eventId", None)
+    event_id = request.args.get("eventId", None)
     if event_id is None:
         return {"status": "error", "msg": "missing required field: eventId"}, 400, {"Content-Type": "application/json"}
     event = events.find_one({"eventId": event_id})
@@ -329,12 +330,10 @@ def available_meals(user, db):
             {"Content-Type": "application/json"},
         )
 
-    avail_meals = {}
+    avail_meals = []
 
     for meal in event["meals"].keys():
-        avail_meals[meal] = get_mealspace(event["registered"], event["meals"], meal)
-
-    print(avail_meals)
+        avail_meals.append([meal, get_mealspace(event["registered"], event["meals"], meal)])
 
     return jsonify(avail_meals)
 
@@ -429,7 +428,7 @@ def register_event(user, db):
     return {"status": "success", "msg": "Registered successfully"}, 200, {"Content-Type": "application/json"}
 
 
-@events.route("/export_raw", methods=["GET"])
+@events.route("/export_raw", methods=["POST"])
 @decorators.access_database("events", "users")
 @decorators.authenticated
 def export_event(user, db):
@@ -454,10 +453,10 @@ def export_event(user, db):
 
     user_lut = {u["username"]: f"{u["name"]["first"]} {u["name"]["last"]}" for u in user_objs}
 
-    csvstr = "name,table_id,party_size,"
+    csvstr = "Name,Table Number,Party Size,"
     for i in event["meals"].keys():
-        csvstr += f"meal: {i},"
-    csvstr = csvstr[:-1]
+        csvstr += f"Meal: {i},"
+    csvstr += "Notes\n"
 
     for username, props in event["registered"].items():
         meals = {i: 0 for i in event["meals"].keys()}
@@ -465,7 +464,7 @@ def export_event(user, db):
             if i not in event["meals"].keys():
                 continue
             meals[i] += 1
-        buf = f"{user_lut[username]},{props['table']},{props['party']},{','.join(meals.values())}"
+        buf = f"{user_lut[username]},{props['table']+1},{props['party']},{','.join([str(i) for i in props["meals"].values()])},{props["notes"]}"
         csvstr += f"{buf}\n"
 
     resp = make_response(csvstr)

@@ -198,7 +198,7 @@ export default function CreateEventPage() {
               id="addTable"
               onPress={(_) => {
                 tableCanvas.addTable(
-                  new CircularTable(200, 200, 250, 0, nextTableSize, tableId),
+                  new CircularTable(200, 200, 300, 0, nextTableSize, tableId),
                 );
                 setTableId((tableId) => tableId + 1);
                 tableCanvas.render();
@@ -329,11 +329,11 @@ export default function CreateEventPage() {
           <h3>{name}</h3>
           <h6>
             When:{" "}
-            {month[rsvpDate.month - 1] +
+            {month[eventDate.month - 1] +
               " " +
-              rsvpDate.day +
+              eventDate.day +
               ", " +
-              rsvpDate.year}
+              eventDate.year}
           </h6>
           <h6>
             Latest Registration:{" "}

@@ -57,10 +57,10 @@ export const UseAuth: FC<{ children: React.ReactNode }> = ({ children }) => {
       if (time < Date.now() / 1000) {
         localStorage.removeItem("token");
         localStorage.removeItem("expireAt");
-        router.push("/login");
+        location.href = "/login";
       }
     } else {
-      router.push("/login");
+      location.href = "/login";
     }
   });
 

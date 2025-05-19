@@ -57,7 +57,8 @@ export default async function RootLayout({
                   <UserNavbar activeIndex={0} />
                 )}
                 {(path!.includes("/joined-events") ||
-                  path!.includes("/join-event")) && (
+                  path!.includes("/join-event") ||
+                  path!.includes("/manage-booking")) && (
                   <UserNavbar activeIndex={1} />
                 )}
               </>

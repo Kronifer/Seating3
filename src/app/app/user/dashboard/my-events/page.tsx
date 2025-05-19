@@ -14,7 +14,7 @@ import {
 } from "@heroui/modal";
 import { addToast } from "@heroui/toast";
 
-import { deleteEvent, getEvents } from "@/utils/api";
+import { deleteEvent, exportEvent, getEvents } from "@/utils/api";
 import { useEffectOnce } from "@/utils/components";
 
 export default function MyEventsPage() {
@@ -97,6 +97,7 @@ export default function MyEventsPage() {
       </Button>
       {events.map((e) => {
         e.date = new Date(Date.parse(e.date));
+        e.rsvpBy = new Date(Date.parse(e.rsvpBy));
 
         return (
           <Card key={e.eventId} className="w-[30lvh] h-[25lvh] shrink-0">
@@ -112,7 +113,11 @@ export default function MyEventsPage() {
                     " " +
                     e.date.getDate() +
                     ", " +
-                    e.date.getFullYear()}
+                    e.date.getFullYear() +
+                    ", " +
+                    e.date.getHours() +
+                    ":" +
+                    e.date.getMinutes().toString().padStart(2, "0")}
                 </li>
                 <li>Registered Parties: {e.registered_count}</li>
                 <li>Invite Code: {e.eventId}</li>
@@ -121,7 +126,32 @@ export default function MyEventsPage() {
             <Divider />
             <CardFooter>
               <div className="flex items-center flex-row w-full space-x-[2%]">
-                <Button className="w-full">Manage Event</Button>
+                <Button
+                  className="w-full"
+                  onPress={(_) => {
+                    var a = exportEvent(e.eventId);
+
+                    if (a === undefined) {
+                      return;
+                    }
+                    a.then((b) => {
+                      if (b.status === 200) {
+                        const blob = new Blob([b.data], { type: "text/csv" });
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+
+                        a.href = url;
+                        a.download = `event-${e.eventId}.csv`;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        a.remove();
+                      }
+                    });
+                  }}
+                >
+                  Export Event
+                </Button>
                 <Button
                   className="w-full"
                   color="danger"

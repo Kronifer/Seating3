@@ -97,6 +97,7 @@ export default function MyEventsPage() {
       </Button>
       {events.map((e) => {
         e.date = new Date(Date.parse(e.date));
+        e.rsvpBy = new Date(Date.parse(e.rsvpBy));
 
         return (
           <Card key={e.eventId} className="w-[32lvh] h-[30lvh] shrink-0">
@@ -113,16 +114,41 @@ export default function MyEventsPage() {
                     " " +
                     e.date.getDate() +
                     ", " +
-                    e.date.getFullYear()}
+                    e.date.getFullYear() +
+                    ", " +
+                    e.date.getHours() +
+                    ":" +
+                    e.date.getMinutes().toString().padStart(2, "0")}
                 </li>
-                <li>Table: {e.table}</li>
+                <li>
+                  Update By:{" "}
+                  {month[e.rsvpBy.getMonth()] +
+                    " " +
+                    e.rsvpBy.getDate() +
+                    ", " +
+                    e.rsvpBy.getFullYear() +
+                    ", " +
+                    e.rsvpBy.getHours() +
+                    ":" +
+                    e.rsvpBy.getMinutes().toString().padStart(2, "0")}
+                </li>
+                <li>Table Number: {e.table + 1}</li>
                 <li>Seats Booked: {e.party_size}</li>
               </ul>
             </CardBody>
             <Divider />
             <CardFooter>
               <div className="flex items-center flex-row w-full space-x-[2%]">
-                <Button className="w-full">Manage Booking</Button>
+                <Button
+                  className="w-full"
+                  isDisabled={e.rsvpBy.getTime() < new Date().getTime()}
+                  onPress={(_) => {
+                    sessionStorage.setItem("eventCode", e.eventId);
+                    location.href = "/user/manage-booking";
+                  }}
+                >
+                  Manage Booking
+                </Button>
                 <Button
                   className="w-full"
                   color="danger"

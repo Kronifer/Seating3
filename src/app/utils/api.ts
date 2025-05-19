@@ -498,3 +498,116 @@ export function joinEvent(eventId: string) {
     }
   });
 }
+
+export function getTablesBooking(eventId: string) {
+  var token = getToken();
+
+  if (token == undefined) {
+    return;
+  }
+
+  return fetch("/api/seats/state?eventId=" + eventId, {
+    method: "GET",
+    headers: {
+      Authorization: token,
+    },
+  }).then((resp) => {
+    return resp.json().then((data) => ({ status: resp.status, json: data }));
+  });
+}
+
+export function getMealsBooking(eventId: string) {
+  var token = getToken();
+
+  if (token == undefined) {
+    return;
+  }
+
+  return fetch("/api/events/meals/available?eventId=" + eventId, {
+    method: "GET",
+    headers: {
+      Authorization: token,
+    },
+  }).then((resp) => {
+    return resp.json().then((data) => ({ status: resp.status, json: data }));
+  });
+}
+
+export function reserveSeats(
+  eventId: string,
+  tableId: number,
+  partySize: number,
+) {
+  var token = getToken();
+
+  if (token == undefined) {
+    return;
+  }
+
+  return fetch("/api/seats/reserve", {
+    method: "POST",
+    headers: {
+      Authorization: token,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      eventId: eventId,
+      tableIndex: tableId,
+      partySize: partySize,
+    }),
+  }).then((resp) => {
+    if (resp.status == 201) {
+      return true;
+    } else {
+      return false;
+    }
+  });
+}
+
+export function reserveMeals(eventId: string, meals: any, notes: string) {
+  var token = getToken();
+
+  if (token == undefined) {
+    return;
+  }
+
+  return fetch("/api/events/meals/select", {
+    method: "PATCH",
+    headers: {
+      Authorization: token,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      eventId: eventId,
+      meals: meals,
+      notes: notes,
+    }),
+  }).then((resp) => {
+    if (resp.status == 201) {
+      return true;
+    } else {
+      return false;
+    }
+  });
+}
+
+export function exportEvent(eventId: string) {
+  var token = getToken();
+
+  if (token == undefined) {
+    return;
+  }
+
+  return fetch("/api/events/export_raw", {
+    method: "POST",
+    headers: {
+      Authorization: token,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      eventId: eventId,
+    }),
+  }).then((resp) => {
+    return resp.text().then((data) => ({ status: resp.status, data: data }));
+  });
+}

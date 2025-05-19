@@ -62,7 +62,7 @@ def reserve_seat(user, db):  # {eventId, tableIndex, partySize}
 @decorators.authenticated
 def get_state(user, db):
     events = db["events"]
-    event_id = request.get_json().get("eventId", None)
+    event_id = request.args.get("eventId", None)
     if event_id is None:
         return {"status": "error", "msg": "missing required field: eventId"}, 400
     event = events.find_one({"eventId": event_id})
@@ -78,7 +78,8 @@ def get_state(user, db):
         return {"status": "error", "msg": "You are not registered for this event"}, 404, {"Content-Type": "text/plain"}
 
     modMap = [
-        (a[0], a[1], compute_remaining(event["registered"], event["tables"], i)) for i, a in enumerate(event["tables"])
+        (a[0], a[1], compute_remaining(event["registered"], event["tables"], i), a[2])
+        for i, a in enumerate(event["tables"])
     ]
 
     return jsonify(modMap)
