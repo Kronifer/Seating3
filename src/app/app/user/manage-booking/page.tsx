@@ -262,6 +262,7 @@ export default function ManageBookingPage() {
                         <Counter
                           innerId={"val-" + item[0]}
                           maxMeals={partySize}
+                          maxThisMeal={item[1]}
                         />
                       </TableCell>
                     </TableRow>

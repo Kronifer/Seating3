@@ -14,9 +14,10 @@ interface GlobalCounter {
 interface CounterProps {
   innerId: string;
   maxMeals: number;
+  maxThisMeal: number;
 }
 
-export const Counter = ({ innerId, maxMeals }: CounterProps) => {
+export const Counter = ({ innerId, maxMeals, maxThisMeal }: CounterProps) => {
   const [count, setCount] = useState(0);
   const globalCounter = useGlobalCounter() as unknown as GlobalCounter;
 
@@ -63,7 +64,7 @@ export const Counter = ({ innerId, maxMeals }: CounterProps) => {
         isIconOnly
         size="sm"
         onPress={(_) => {
-          if (globalCounter.state >= maxMeals) {
+          if (globalCounter.state >= maxMeals || globalCounter.state >= maxThisMeal) {
             return;
           }
           setCount(count + 1);
